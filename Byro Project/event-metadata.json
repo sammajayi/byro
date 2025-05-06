@@ -1,0 +1,19 @@
+{
+    "name": "Crypto Event Ticket",
+    "description": "This NFT grants access to the exclusive Blockchain Conference 2025.",
+    "image": "bafybeiakzqaurclhygj55ecikbh4vraw7jqqhgyvsalw5opf7yuhkfbr7a",
+    "attributes": [
+        {
+            "trait_type": "Location",
+            "value": "Lagos, Nigeria"
+        },
+        {
+            "trait_type": "Date",
+            "value": "2025-06-20"
+        },
+        {
+            "trait_type": "Seat",
+            "value": "General Admission"
+        }
+    ]
+}
