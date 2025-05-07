@@ -1,7 +1,13 @@
-// components/Tab.jsx
+// components/events/Tab.tsx
 import React from "react";
 
-const Tab = ({ label, isActive, onClick }) => {
+interface TabProps {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const Tab: React.FC<TabProps> = ({ label, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}

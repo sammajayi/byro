@@ -1,10 +1,11 @@
-import '@coinbase/onchainkit/styles.css'; 
-import './globals.css';
+// app/layout.tsx
+import "@coinbase/onchainkit/styles.css";
+import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Providers } from './onchain/providers';
-import AuthProvider from './privy/AuthProvider';
+import { Providers } from "./onchain/providers";
+import AuthProvider from "./privy/AuthProvider";
+import Navigation from "../components/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-pink-50 to-blue-50 min-h-screen`}
       >
-        <AuthProvider><Providers>{children}</Providers></AuthProvider>
+        <AuthProvider>
+          <Providers>
+            <Navigation />
+            <main className="py-6">{children}</main>
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

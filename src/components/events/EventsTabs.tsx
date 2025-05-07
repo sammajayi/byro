@@ -1,8 +1,13 @@
-// components/EventsTabs.jsx
+// components/events/EventsTabs.tsx
 import React from "react";
 import Tab from "./Tab";
 
-const EventsTabs = ({ activeTab, onTabChange }) => {
+interface EventsTabsProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+const EventsTabs: React.FC<EventsTabsProps> = ({ activeTab, onTabChange }) => {
   return (
     <div className="flex space-x-2 bg-blue-50 p-1 rounded-full">
       <Tab

@@ -1,7 +1,11 @@
-// components/CreateEventButton.jsx
+// components/events/CreateEventButton.tsx
 import React from "react";
 
-const CreateEventButton = ({ onClick }) => {
+interface CreateEventButtonProps {
+  onClick: () => void;
+}
+
+const CreateEventButton: React.FC<CreateEventButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}

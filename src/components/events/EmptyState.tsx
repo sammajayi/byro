@@ -1,7 +1,11 @@
-// components/EmptyState.jsx
+// components/events/EmptyState.tsx
 import React from "react";
 
-const EmptyState = ({ onCreateEvent }) => {
+interface EmptyStateProps {
+  onCreateEvent: () => void;
+}
+
+const EmptyState: React.FC<EmptyStateProps> = ({ onCreateEvent }) => {
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <div className="relative mb-4">

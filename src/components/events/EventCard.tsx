@@ -1,7 +1,12 @@
-// components/EventCard.jsx
+// components/events/EventCard.tsx
 import React from "react";
+import { Event } from "../../types/event";
 
-const EventCard = ({ event }) => {
+interface EventCardProps {
+  event: Event;
+}
+
+const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md">
       <div className="relative">

@@ -1,20 +1,25 @@
-// pages/events.js (or app/events/page.js in App Router)
+// app/events/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import EventsContainer from "../../components/events/EventsContainer";
-import EmptyState from "../../components//events/EmptyState";
+import EmptyState from "../../components/events/EmptyState";
 import EventsTabs from "../../components/events/EventsTabs";
 import {
   fetchUpcomingEvents,
   fetchPastEvents,
 } from "../../services/eventServices";
+import { Event } from "../../types/event";
+import { useRouter } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [pastEvents, setPastEvents] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { authenticated, login } = usePrivy();
 
   useEffect(() => {
     // Load initial data
@@ -37,19 +42,20 @@ export default function EventsPage() {
     loadEvents();
   }, []);
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
 
   const handleCreateEvent = () => {
-    // In a real app, this would likely open a modal or navigate to a create event page
-    console.log("Create event clicked");
-    alert("Create event functionality would open here");
+    // Check if user is authenticated
+    if (!authenticated) {
+      // Prompt the user to log in
+      login();
+      return;
+    }
 
-    // In a real application, you might use a modal or redirect:
-    // router.push('/events/create');
-    // or
-    // setShowCreateEventModal(true);
+    // Navigate to create event page or open modal
+    router.push("/events/create");
   };
 
   // Determine which events to display based on active tab
