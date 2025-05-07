@@ -66,9 +66,9 @@ export default function EventsPage() {
   // Show loading state
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Events</h1>
+      <div className="max-w-6xl mx-auto p-6 bg-transparent">
+        <div className="flex items-center gap-6 mb-6">
+          <h1 className="text-4xl font-extrabold">Events</h1>
           <EventsTabs activeTab={activeTab} onTabChange={handleTabChange} />
         </div>
         <div className="flex justify-center items-center h-64">
@@ -79,9 +79,9 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Events</h1>
+    <div className="max-w-6xl mx-auto p-6 bg-transparent">
+      <div className="flex items-center gap-6 mb-6">
+        <h1 className="text-4xl font-extrabold">Events</h1>
         <EventsTabs activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 

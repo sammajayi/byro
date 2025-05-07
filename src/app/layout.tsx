@@ -6,6 +6,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./onchain/providers";
 import AuthProvider from "./privy/AuthProvider";
 import Navigation from "../components/Navigation";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import { mainBg } from "./assets";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +34,21 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-pink-50 to-blue-50 min-h-screen`}
+        style={{
+          backgroundImage: `url('/asset/images/mainsection.png') !important`,
+          backgroundAttachment: "fixed",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          height: "100vh",
+        }}
       >
         <AuthProvider>
           <Providers>
-            <Navigation />
-            <main className="py-6">{children}</main>
+            {/* <Navigation /> */}
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
           </Providers>
         </AuthProvider>
       </body>
