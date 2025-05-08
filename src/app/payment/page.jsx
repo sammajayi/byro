@@ -28,15 +28,15 @@ export default function PaymentPage() {
 
   const onSubmit = async (data) => {
     const formattedData = {
-      amount: data.amount,
+      amount: +data.amount,
       description: data.description,
       name: data.name,
     };
 
+    console.log(formattedData);
     try {
       setLoading(true);
       setError("");
-
       const res = await axios.post("/payment-links/create/", formattedData, {
         headers: {
           "Content-Type": "application/json",
@@ -47,6 +47,7 @@ export default function PaymentPage() {
       setSuccess(true);
       reset();
     } catch (err) {
+      console.error(err);
       setError(err.response?.data?.message || "Failed to create payment link");
     } finally {
       setLoading(false);
@@ -63,7 +64,13 @@ export default function PaymentPage() {
         </div>
 
         <div className="p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(onSubmit)(e);
+            }}
+            className="space-y-6"
+          >
             <div>
               <label
                 htmlFor="amount"
