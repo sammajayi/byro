@@ -62,7 +62,7 @@ export default function AuthButton() {
 
           // router.push("/events");
         } else {
-          toast.error("Failed to save user data");
+          toast.error(response.data.message || response.data.error || "Failed to save user data");
           console.error("Unexpected response:", response);
           return;
         }
@@ -79,7 +79,7 @@ export default function AuthButton() {
         } else if (error.response?.status === 400) {
           toast.error(error.response.data?.message || "Invalid user data");
         } else {
-          toast.error("Failed to complete sign in. Please try again.");
+          toast.error(error.response.data?.message || "Failed to complete sign in. Please try again.");
         }
 
         setError(error.message);
