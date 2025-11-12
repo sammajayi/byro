@@ -9,6 +9,9 @@ import PaymentMethod from "@/components/PaymentMethod";
 import { useParams, useRouter } from "next/navigation";
 import API from "../../../services/api"; // Import the API object
 import { toast } from "sonner";
+import axiosInstance from "@/utils/axios";
+import Navbar from "@/components/Navbar";
+import { Providers } from "@/redux/Providers";
 
 export default function EventRegistration() {
   const { slug } = useParams();
@@ -25,8 +28,14 @@ export default function EventRegistration() {
     phone: "",
     source: "",
   });
+  // const { token } = useSelector((state) => state.auth);
 
-  console.log(`regEventSlug: `, slug)
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      // Authorization: `Bearer ${token}`,
+    },
+  };
 
   // Fetch event data when component mounts
   useEffect(() => {
@@ -36,20 +45,19 @@ export default function EventRegistration() {
       try {
         setLoading(true);
         setError(null);
-
-           const token = localStorage.getItem('authToken');
-      if (token) {
-        API.setAuthToken(token);
-      }
-
-        // Use API.getEvent instead of getEvent
-        const response = await API.getEvent(slug);
-        console.log("Fetched event data:", response);
-        setEvent(response);
+        const response = await axiosInstance.get(
+          `/events/${slug}/`,
+          headerConfig
+        );
+        const data = response.data;
+        console.log("Fetched event data:", data);
+        setEvent(data);
       } catch (err) {
         console.error("Error fetching event:", err);
         setError(err.message || "Failed to load event");
-        toast.error(err.response?.data?.message || "Failed to load event details");
+        toast.error(
+          err.response?.data?.message || "Failed to load event details"
+        );
 
         // Optionally redirect back to events page after a delay
         // setTimeout(() => {
@@ -126,242 +134,245 @@ export default function EventRegistration() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-7xl mx-auto mb-20">
-        <div className="flex gap-24 ">
-          {currentStep === 3 ? (
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Image src={Tix} alt="ticket-icon" />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Choose Payment Method
-                </h1>
+    <Providers>
+      <div className="min-h-screen bg-white ">
+        <Navbar />
+        <div className="max-w-7xl mx-auto mb-20 pt-6">
+          <div className="flex gap-24 ">
+            {currentStep === 3 ? (
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <Image src={Tix} alt="ticket-icon" />
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Choose Payment Method
+                  </h1>
+                </div>
+                <p className="text-gray-600">
+                  Select your preferred payment method to complete your ticket
+                  purchase
+                </p>
               </div>
-              <p className="text-gray-600">
-                Select your preferred payment method to complete your ticket
-                purchase
-              </p>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Image src={Tix} alt="ticket-icon" />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Event Registration
-                </h1>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <Image src={Tix} alt="ticket-icon" />
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Event Registration
+                  </h1>
+                </div>
+                <p className="text-gray-600">
+                  Complete your registration for <strong>{event.name}</strong>
+                </p>
               </div>
-              <p className="text-gray-600">
-                Complete your registration for <strong>{event.name}</strong>
-              </p>
-            </div>
-          )}
+            )}
 
-          <div className="flex items-center justify-end gap-4 mb-8">
-            {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center font-semibold text-lg ${
-                      currentStep === step.number
-                        ? "bg-green-500 text-white"
-                        : currentStep > step.number
-                        ? "bg-green-100 text-green-600 border-2 border-green-500"
-                        : "bg-white text-gray-400 border-2 border-gray-200"
-                    }`}
-                  >
-                    {step.number}
-                  </div>
-                  <div>
+            <div className="flex items-center justify-end gap-4 mb-8">
+              {steps.map((step, index) => (
+                <div key={step.number} className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div
-                      className={`font-semibold ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center font-semibold text-lg ${
                         currentStep === step.number
-                          ? "text-gray-900"
-                          : "text-gray-500"
+                          ? "bg-green-500 text-white"
+                          : currentStep > step.number
+                          ? "bg-green-100 text-green-600 border-2 border-green-500"
+                          : "bg-white text-gray-400 border-2 border-gray-200"
                       }`}
                     >
-                      {step.title}
+                      {step.number}
                     </div>
-                    {step.subtitle && (
+                    <div>
                       <div
-                        className={`text-sm ${
+                        className={`font-semibold ${
                           currentStep === step.number
-                            ? "text-gray-600"
-                            : "text-gray-400"
+                            ? "text-gray-900"
+                            : "text-gray-500"
                         }`}
                       >
-                        {step.subtitle}
+                        {step.title}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Form */}
-          <div className="bg-white rounded-xl shadow-xl p-8">
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-normal text-[#090909] mb-2">
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    How did you hear about this event
-                  </label>
-                  <input
-                    type="text"
-                    name="source"
-                    value={formData.source}
-                    onChange={handleInputChange}
-                    className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      First Name
-                    </label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                      {formData.firstName}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      Last Name
-                    </label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                      {formData.lastName}
+                      {step.subtitle && (
+                        <div
+                          className={`text-sm ${
+                            currentStep === step.number
+                              ? "text-gray-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {step.subtitle}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Email
-                  </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.email}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Phone Number
-                  </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.phone}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    How did you hear about this event
-                  </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.source}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="space-y-6 bg-none">
-                <PaymentMethod />
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 mt-8">
-              <button
-                onClick={handleBack}
-                className="flex-1 px-6 py-3 border-2 border-blue-500 text-blue-500 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <Undo2 size={20} />
-                {currentStep === 1 ? "Back to Event" : "Back"}
-              </button>
-              <button
-                onClick={handleContinue}
-                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
-                disabled={
-                  currentStep === 1 &&
-                  (!formData.firstName ||
-                    !formData.lastName ||
-                    !formData.email ||
-                    !formData.phone)
-                }
-              >
-                {currentStep === 3 ? "Complete Payment" : "Continue"}
-              </button>
+              ))}
             </div>
           </div>
 
-          <EventMiniCard event={event} />
+          {/* Content Area */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Form */}
+            <div className="bg-white rounded-xl shadow-xl p-8">
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-normal text-[#090909] mb-2">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#090909] mb-2">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      How did you hear about this event
+                    </label>
+                    <input
+                      type="text"
+                      name="source"
+                      value={formData.source}
+                      onChange={handleInputChange}
+                      className="text-black w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#090909] mb-2">
+                        First Name
+                      </label>
+                      <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
+                        {formData.firstName}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#090909] mb-2">
+                        Last Name
+                      </label>
+                      <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
+                        {formData.lastName}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      Email
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
+                      {formData.email}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      Phone Number
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
+                      {formData.phone}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">
+                      How did you hear about this event
+                    </label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
+                      {formData.source}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 3 && (
+                <div className="space-y-6 bg-none">
+                  <PaymentMethod />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 mt-8">
+                <button
+                  onClick={handleBack}
+                  className="flex-1 px-6 py-3 border-2 border-blue-500 text-blue-500 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Undo2 size={20} />
+                  {currentStep === 1 ? "Back to Event" : "Back"}
+                </button>
+                <button
+                  onClick={handleContinue}
+                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
+                  disabled={
+                    currentStep === 1 &&
+                    (!formData.firstName ||
+                      !formData.lastName ||
+                      !formData.email ||
+                      !formData.phone)
+                  }
+                >
+                  {currentStep === 3 ? "Complete Payment" : "Continue"}
+                </button>
+              </div>
+            </div>
+
+            <EventMiniCard event={event} />
+          </div>
         </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </Providers>
   );
 }

@@ -2,11 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { fetchHappeningEvents } from "@/services/eventServices";
 import EventCard from "./EventCard";
+import axiosInstance from "@/utils/axios";
+import { useSelector } from "react-redux";
 
 const EventsContainer = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { token } = useSelector((state) => state.auth);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      // Authorization: `Bearer ${token}`,
+    },
+  };
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -14,7 +24,8 @@ const EventsContainer = () => {
         setLoading(true);
         setError(null);
 
-        const happeningEvents = await fetchHappeningEvents();
+        const response = await axiosInstance.get("/events/", headerConfig);
+        const happeningEvents = response.data;
 
         if (Array.isArray(happeningEvents)) {
           setEvents(happeningEvents);

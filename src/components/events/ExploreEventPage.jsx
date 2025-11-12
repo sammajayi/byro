@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Box, Users, Palette, Dumbbell, Monitor, Settings } from "lucide-react";
 import EventsContainer from "./EventsContainer";
+import axiosInstance from "@/utils/axios";
 
 const CategoryCard = ({
   title,
@@ -30,6 +31,13 @@ const CategoryCard = ({
 
 export default function Categories() {
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categoriesList, setCategoriesList] = useState([]);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(selectedCategory === category ? null : category);
@@ -75,6 +83,22 @@ export default function Categories() {
       icon: Settings,
     },
   ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get(
+          "/events/categories/",
+          headerConfig
+        );
+        setCategoriesList(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto p-6">

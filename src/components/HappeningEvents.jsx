@@ -6,18 +6,29 @@ import { useEffect, useState } from "react";
 import EventsContainer from "./events/EventsContainer";
 import { fetchHappeningEvents } from "../services/eventServices";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import axiosInstance from "@/utils/axios";
 // import { fetchEventsByLocation } from "@/lib/api";
 
 const HappeningEvents = () => {
   const [loading, setLoading] = useState(false);
   const [happeningEvents, setHappeningEvents] = useState([]);
+  const { token } = useSelector((state) => state.auth);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   useEffect(() => {
     // Load initial data
     const loadEvents = async () => {
       setLoading(true);
       try {
-        const [happening] = await Promise.all([fetchHappeningEvents()]);
+        const response = await axiosInstance.get("/events/", headerConfig);
+        const happening = response.data;
         setHappeningEvents(happening);
       } catch (error) {
         console.error("Failed to load events:", error);

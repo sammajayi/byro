@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +11,6 @@ const Payout = () => {
     accountNumber: "",
     bankName: "",
 
-    
     walletAddress: "",
     walletType: "ethereum",
 
@@ -28,7 +28,6 @@ const Payout = () => {
       [name]: value,
     }));
 
-   
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -84,41 +83,42 @@ const Payout = () => {
 
     if (validateForm()) {
       // Handle form submission
-  
 
       const emailResponse = await fetch("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           emails: [
             {
-              type:"payout",
+              type: "payout",
               to: formData.email,
               data: {
-             name: formData.accountName || "User", // Use account name or fallback
-                  amount: formData.amount,
-                  method: payoutMethod,
-                   // Add more payout details as needed
-                  ...(payoutMethod === "bank" && {
-                    accountNumber: formData.accountNumber,
-                    bankName: formData.bankName,
-                  }),
-                  ...(payoutMethod === "wallet" && {
-                    walletAddress: formData.walletAddress,
-                    walletType: formData.walletType,
-                  }),
-              }
-            }
-          ]
-        })
-      })
+                name: formData.accountName || "User", // Use account name or fallback
+                amount: formData.amount,
+                method: payoutMethod,
+                // Add more payout details as needed
+                ...(payoutMethod === "bank" && {
+                  accountNumber: formData.accountNumber,
+                  bankName: formData.bankName,
+                }),
+                ...(payoutMethod === "wallet" && {
+                  walletAddress: formData.walletAddress,
+                  walletType: formData.walletType,
+                }),
+              },
+            },
+          ],
+        }),
+      });
       if (emailResponse.ok) {
-     toast.success("Payout request submitted successfully! You'll receive a confirmation email.");
-    } else {
-      toast.error("Failed to submit payout request.");
+        toast.success(
+          "Payout request submitted successfully! You'll receive a confirmation email."
+        );
+      } else {
+        toast.error("Failed to submit payout request.");
+      }
     }
   };
-}
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-lg  p-6">
@@ -127,7 +127,6 @@ const Payout = () => {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* Payout Method Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -143,7 +142,9 @@ const Payout = () => {
                 onChange={(e) => setPayoutMethod(e.target.value)}
                 className="mr-2 text-blue-600"
               />
-              <span className="text-sm text-gray-700 font-semibold">Bank Transfer</span>
+              <span className="text-sm text-gray-700 font-semibold">
+                Bank Transfer
+              </span>
             </label>
             <label className="flex items-center">
               <input
@@ -154,7 +155,9 @@ const Payout = () => {
                 onChange={(e) => setPayoutMethod(e.target.value)}
                 className="mr-2 text-blue-600"
               />
-              <span className="text-sm text-gray-700 font-semibold">Crypto Wallet</span>
+              <span className="text-sm text-gray-700 font-semibold">
+                Crypto Wallet
+              </span>
             </label>
           </div>
         </div>
@@ -313,25 +316,26 @@ const Payout = () => {
           </div>
         </div>
 
-       
         <button
           type="submit"
           disabled={isSubmitting}
           className={`w-full py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
-          isSubmitting 
-            ? "bg-gray-400 cursor-not-allowed" 
-            : "bg-blue-600 hover:bg-blue-700"
-        } text-white`}
-      >
-         {isSubmitting ? "Submitting..." : "Request Payout"}
+            isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } text-white`}
+        >
+          {isSubmitting ? "Submitting..." : "Request Payout"}
         </button>
       </form>
 
       <div>
-        <p className="text-black text-xs italic mt-10 text-center">NB: Payout will be received in 24 hours</p>
+        <p className="text-black text-xs italic mt-10 text-center">
+          NB: Payout will be received in 24 hours
+        </p>
       </div>
     </div>
   );
 };
 
-export default Payout
+export default Payout;

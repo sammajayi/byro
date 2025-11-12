@@ -7,11 +7,21 @@ import EventCreationForm from "../../../components/events/EventCreationForm";
 import AppLayout from "@/layout/app";
 import API from "@/services/api";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import axiosInstance from "@/utils/axios";
 
 export default function CreateEventPage() {
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const { token } = useSelector((state) => state.auth);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   // Handle authentication
   useEffect(() => {
@@ -25,8 +35,11 @@ export default function CreateEventPage() {
 
   const handleEventCreated = async (eventData) => {
     try {
-      const accessToken = await getAccessToken();
-      const response = await API.createEvent(eventData, accessToken);
+      const response = await axiosInstance.post(
+        "/events/",
+        eventData,
+        headerConfig
+      );
 
       console.log("Event created:", response);
       toast.success("Event created successfully!");

@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { TbArrowBackUp } from "react-icons/tb";
 import { Providers } from "@/redux/Providers";
+import { useSelector } from "react-redux";
+import axiosInstance from "@/utils/axios";
 
 const ViewEvent = () => {
   const { slug } = useParams();
@@ -24,8 +26,14 @@ const ViewEvent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
+  // const { token } = useSelector((state) => state.auth);
 
-  console.log("Event Data:", useParams());
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      // Authorization: `Bearer ${token}`,
+    },
+  };
 
   // Get image URL with fallback
   const getImageUrl = () => {
@@ -38,8 +46,7 @@ const ViewEvent = () => {
       return event.event_image;
     }
 
-    const baseURL =
-      process.env.NEXT_PUBLIC_API_URL;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
     return `${baseURL}${event.event_image}`;
   };
 
@@ -152,7 +159,11 @@ const ViewEvent = () => {
     const fetchEvent = async () => {
       try {
         setLoading(true);
-        const eventData = await API.getEvent(slug);
+        const response = await axiosInstance.get(
+          `/events/${slug}/`,
+          headerConfig
+        );
+        const eventData = response.data;
         if (eventData?.id || eventData?.slug) {
           setEvent(eventData);
           if (eventData.slug && eventData.slug !== slug) {

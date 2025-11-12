@@ -11,20 +11,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { authSuccess, signOut } from "@/redux/auth/authSlice";
 
 export default function AuthButton() {
-  const { user: reduxUser, token, isAuthenticated } = useSelector((state) => state.auth);
+  const {
+    user: reduxUser,
+    token,
+    isAuthenticated,
+  } = useSelector((state) => state.auth);
   const { ready, authenticated, user, logout } = usePrivy();
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const router = useRouter();
 
-
   const handleLoginComplete = useCallback(
     async ({ user }) => {
       // Check if already authenticated in Redux
       if (isAuthenticated && token) {
-        console.log("Already authenticated in Redux, skipping backend call");
         return;
       }
 
@@ -33,17 +35,13 @@ export default function AuthButton() {
         return;
       }
 
-      // Check if already authenticated in Redux
-      const storedToken = localStorage.getItem('authToken');
-      if (storedToken) {
-        console.log("Already authenticated, skipping backend call");
+      if (token) {
         return;
       }
 
       try {
         setLoading(true);
 
-     
         const response = await axiosInstance.post(
           "/auth/privy/",
           {
@@ -61,18 +59,21 @@ export default function AuthButton() {
         );
 
         if (response.status === 200 && response.data) {
-          
           dispatch(
             authSuccess({
               user: response.data.user,
-              token: response.data.tokens,
+              token: response.data.tokens.access,
             })
           );
           toast.success(response.data.message || "Successfully signed in!");
 
           // router.push("/events");
         } else {
-          toast.error(response.data.message || response.data.error || "Failed to save user data");
+          toast.error(
+            response.data.message ||
+              response.data.error ||
+              "Failed to save user data"
+          );
           console.error("Unexpected response:", response);
           return;
         }
@@ -89,7 +90,10 @@ export default function AuthButton() {
         } else if (error.response?.status === 400) {
           toast.error(error.response.data?.message || "Invalid user data");
         } else {
-          toast.error(error.response.data?.message || "Failed to complete sign in. Please try again.");
+          toast.error(
+            error.response.data?.message ||
+              "Failed to complete sign in. Please try again."
+          );
         }
 
         setError(error.message);

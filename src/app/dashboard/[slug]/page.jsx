@@ -24,6 +24,7 @@ import Confirmation from "./Confirmation";
 import Reminder from "./Reminder";
 import Image from "next/image";
 import { Providers } from "@/redux/Providers";
+import { useSelector } from "react-redux";
 
 export default function EventDashboard() {
   const params = useParams();
@@ -33,6 +34,14 @@ export default function EventDashboard() {
   const [ticketData, setTicketData] = useState(null);
   const [event, setEvent] = useState(null);
   const [activePage, setActivePage] = useState("overview");
+  const { token } = useSelector((state) => state.auth);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   const router = useRouter();
 
@@ -52,7 +61,11 @@ export default function EventDashboard() {
   useEffect(() => {
     async function fetchEvent() {
       try {
-        const data = await API.getEvent(slug);
+        const response = await axiosInstance.get(
+          `/events/${slug}/`,
+          headerConfig
+        );
+        const data = response.data;
         setEvent(data);
       } catch (err) {
         console.error("Error fetching event:", err);

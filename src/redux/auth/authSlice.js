@@ -1,9 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
-  token: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('token') || 'null') : null,
-  isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('token') : false,
+  user:
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") || "null")
+      : null,
+  token:
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("token") || "null")
+      : null,
+  isAuthenticated:
+    typeof window !== "undefined" ? !!localStorage.getItem("token") : false,
+  isLoggedIn: false,
 };
 
 const authSlice = createSlice({
@@ -14,23 +22,25 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      
+      state.isLoggedIn = true;
+
       // Persist to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
-        localStorage.setItem('token', JSON.stringify(action.payload.token));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("token", JSON.stringify(action.payload.token));
       }
     },
     signOut: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      
+      state.isLoggedIn = false;
+
       // Clear localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        localStorage.removeItem('authToken');
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
       }
     },
   },

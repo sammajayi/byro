@@ -1,9 +1,15 @@
+"use client";
+
 import API from "../../../services/api";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Schedule, Location, schedule } from "../../assets";
 import Image from "next/image";
 import { Link, ExternalLink, Edit3, Plus, Trash2 } from "lucide-react";
+import axios from "axios";
+import axiosInstance from "@/utils/axios";
+import { useSelector } from "react-redux";
+import { Providers } from "@/redux/Providers";
 
 export default function EventDetails() {
   const params = useParams();
@@ -13,11 +19,23 @@ export default function EventDetails() {
   const [showAddHost, setShowAddHost] = useState(false);
   const [newHostEmail, setNewHostEmail] = useState("");
   const [newHostName, setNewHostName] = useState("");
+  const { token } = useSelector((state) => state.auth);
+
+  const headerConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   useEffect(() => {
     async function fetchEvent() {
       try {
-        const data = await API.getEvent(slug);
+        const response = await axiosInstance.get(
+          `/events/${slug}/`,
+          headerConfig
+        );
+        const data = response.data;
         setEvent(data);
       } catch (err) {
         console.error("Error fetching event:", err);
@@ -73,13 +91,13 @@ export default function EventDetails() {
           role: "Host",
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to add host");
       }
-  
+
       const data = await response.json();
-  
+
       // Assuming your API returns the newly added host
       setHosts((prev) => [...prev, data]);
       setNewHostName("");
@@ -94,7 +112,6 @@ export default function EventDetails() {
   const handleRemoveHost = (hostId) => {
     setHosts(hosts.filter((host) => host.id !== hostId));
   };
-
 
   const eventData = event;
 

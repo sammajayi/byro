@@ -1,3 +1,4 @@
+"use client";
 import React, { Component, useState } from "react";
 import {
   Trash2,

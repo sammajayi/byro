@@ -7,9 +7,7 @@ const handleApiError = (error) => {
       status: error.response.status,
       data: error.response.data,
     });
-    throw Error(
-      error.response.data?.message || "An unexpected error occurred"
-    );
+    throw Error(error.response.data?.message || "An unexpected error occurred");
   } else if (error.request) {
     console.error("API No Response:", error.request);
     throw new Error("No response from server. Please check your connection.");
@@ -35,16 +33,16 @@ const API = {
   // ===== EVENTS =====
   createEvent: async (formData, accessToken) => {
     try {
-      console.log("Sending form data to API:", formData); 
+      console.log("Sending form data to API:", formData);
       const response = await axiosInstance.post("/events/", formData, {
         headers: {
-          "Accept": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "multipart/form-data",
         },
-        transformRequest: (data) => data, 
+        transformRequest: (data) => data,
       });
-      console.log("API Response:", response.data); 
+      console.log("API Response:", response.data);
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data || error);
@@ -66,7 +64,7 @@ const API = {
       const response = await axiosInstance.get(`/events/${slug}/`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching event by slug:', error);
+      console.error("Error fetching event by slug:", error);
       throw error;
     }
   },
@@ -85,14 +83,14 @@ const API = {
     try {
       console.log("Registration request details:", {
         url: `/events/${eventSlug}/register/`,
-        userData
-      }); 
-      
+        userData,
+      });
+
       const response = await axiosInstance.post(
         `/events/${eventSlug}/register/`,
         {
           name: userData.name,
-          email: userData.email
+          email: userData.email,
         }
       );
       console.log("Registration response:", response.data);
@@ -104,27 +102,28 @@ const API = {
         message: error.message,
         requestData: {
           url: `/events/${eventSlug}/register/`,
-          userData
-        }
+          userData,
+        },
       });
-      
+
       if (error.response?.status === 404) {
-        throw new Error('Event not found');
+        throw new Error("Event not found");
       } else if (error.response?.status === 400) {
-        throw new Error(error.response.data?.message || 'Invalid registration data');
+        throw new Error(
+          error.response.data?.message || "Invalid registration data"
+        );
       }
-      
+
       throw handleApiError(error);
     }
   },
-
 
   // Update an event
   updateEvent: async (slug, formData) => {
     try {
       const response = await axiosInstance.put(`/events/${slug}/`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
@@ -165,23 +164,27 @@ const API = {
     }
   },
 
-
   // Privy
-  getPrivyToken: async (accessToken) => { 
+  getPrivyToken: async (accessToken) => {
     try {
-      const response = await axiosInstance.post("/auth/privy/", { 
-        accessToken: accessToken 
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+      const response = await axiosInstance.post(
+        "/auth/privy/",
+        {
+          accessToken: accessToken,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
-      });
+      );
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid access token";
+        const errorMessage =
+          error.response.data?.message || "Invalid access token";
         throw new Error(errorMessage);
       }
       throw handleApiError(error);
@@ -189,20 +192,25 @@ const API = {
   },
 
   getIdToken: async (identityToken) => {
-    try{
-      const response = await axiosInstance.post ('/auth/privy/', {
-        identityToken: identityToken
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${identityToken}` // Use identity token
+    try {
+      const response = await axiosInstance.post(
+        "/auth/privy/",
+        {
+          identityToken: identityToken,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${identityToken}`, // Use identity token
+          },
         }
-      });
-      return response.data
+      );
+      return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid identity token";
+        const errorMessage =
+          error.response.data?.message || "Invalid identity token";
         throw new Error(errorMessage);
       }
       throw handleApiError(error);
@@ -212,25 +220,29 @@ const API = {
   // Waitlist
   joinWaitlist: async (data) => {
     try {
-      const response = await axiosInstance.post("/waitlist/", {
-        email: data.email,
-        source: "website"
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await axiosInstance.post(
+        "/waitlist/",
+        {
+          email: data.email,
+          source: "website",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
-      });
+      );
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid email format";
+        const errorMessage =
+          error.response.data?.message || "Invalid email format";
         throw new Error(errorMessage);
       }
       throw handleApiError(error);
     }
   },
-
 };
 
 export default API;

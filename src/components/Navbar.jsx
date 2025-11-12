@@ -20,14 +20,13 @@ const Navbar = () => {
   // const router = useRouter();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
-  const { user, token } = useSelector((state) => state.auth);
+  const { user, token, isLoggedIn } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (token) {
       API.setAuthToken(token);
     }
   }, [token]);
-
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -55,8 +54,8 @@ const Navbar = () => {
 
   const isActive = (href) => pathname === href;
 
-  const desktopSearchInputRef = useRef < HTMLInputElement > null;
-  const mobileSearchInputRef = useRef < HTMLInputElement > null;
+  const desktopSearchInputRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
 
   useEffect(() => {
     if (isDesktopSearchOpen && desktopSearchInputRef.current) {
@@ -99,7 +98,6 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         {!authenticated && (
           <>
-            
             <div className="hidden lg:flex items-center justify-between py-4">
               <div>
                 <Link href="/">
@@ -157,7 +155,6 @@ const Navbar = () => {
               <PrivyButton />
             </div>
 
-            
             <div className="lg:hidden">
               <div className="flex items-center justify-between py-4">
                 <div>
@@ -206,7 +203,6 @@ const Navbar = () => {
                 </div>
               </div>
 
-          
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
                   isMenuOpen ? "max-h-96 opacity-100 pb-4" : "max-h-0 opacity-0"
@@ -258,7 +254,7 @@ const Navbar = () => {
           </>
         )}
 
-        { authenticated && (
+        {authenticated && token && (
           <>
             {/* Desktop View */}
             <div className="hidden lg:flex items-center justify-between py-4 bg-[#FFFFFF]">
