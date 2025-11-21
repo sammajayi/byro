@@ -8,7 +8,6 @@ import axiosInstance from "@/utils/axios";
 const CategoryCard = ({
   title,
   eventCount,
-  icon: Icon,
   bgColor = "bg-blue-100",
   isSelected,
   onClick,
@@ -23,7 +22,7 @@ const CategoryCard = ({
         <p className="text-blue-600 font-medium text-sm">{eventCount} Events</p>
       </div>
       <div className="text-4xl">
-        <Icon className="w-8 h-8 text-blue-600" />
+        {/* <Icon className="w-8 h-8 text-blue-600" /> */}
       </div>
     </div>
   );
@@ -91,7 +90,8 @@ export default function Categories() {
           "/events/categories/",
           headerConfig
         );
-        setCategoriesList(response.data);
+        console.log("Fetched categories:", response.data?.categories);
+        setCategoriesList(response.data?.categories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -113,17 +113,16 @@ export default function Categories() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category, index) => (
-          <CategoryCard
-            key={index}
-            title={category.title}
-            eventCount={category.eventCount}
-            icon={category.icon}
-            bgColor={category.bgColor}
-            isSelected={selectedCategory === category.id}
-            onClick={() => handleCategoryClick(category.id)}
-          />
-        ))}
+        {categoriesList.length > 0 &&
+          categoriesList.map((category, index) => (
+            <CategoryCard
+              key={index}
+              title={category?.label}
+              eventCount={category?.count}
+              isSelected={selectedCategory === category.value}
+              onClick={() => handleCategoryClick(category.value)}
+            />
+          ))}
       </div>
 
       {selectedCategory && (
@@ -131,7 +130,10 @@ export default function Categories() {
           <p className="text-gray-700">
             Filtering events by:{" "}
             <span className="font-semibold text-blue-600">
-              {categories.find((cat) => cat.id === selectedCategory)?.title}
+              {
+                categoriesList.find((cat) => cat.value === selectedCategory)
+                  ?.label
+              }
             </span>
           </p>
           <button

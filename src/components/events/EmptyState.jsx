@@ -17,7 +17,7 @@ const EmptyState = ({ onCreateEvent }) => {
       </p>
       <button
         onClick={onCreateEvent}
-        className="mt-6 bg-[#FAFAFA] border border-[#EAEAEA] hover:bg-[#fafafae2] text-[#1E1E1E] font-medium py-2 px-6 rounded-full transition-colors"
+        className="mt-6 bg-[#FAFAFA] border border-[#EAEAEA] hover:bg-[#378fece2] hover:text-white text-[#1E1E1E] font-medium py-2 px-6 rounded-full transition-colors"
       >
         Create Event
       </button>

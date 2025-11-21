@@ -109,7 +109,7 @@ const Navbar = () => {
                   />
                 </Link>
               </div>
-
+              {/* 
               <div className="flex items-center space-x-8 flex-grow justify-center">
                 {!isDesktopSearchOpen ? (
                   <div
@@ -150,6 +150,24 @@ const Navbar = () => {
                     </svg>
                   </div>
                 )}
+              </div> */}
+              <div className="flex items-center space-x-2 cursor-pointer rounded-full py-2 px-4 hover:text-gray-600 transition-colors">
+                <Link
+                  href="/events/browse"
+                  className={`${
+                    isActive("/events/browse")
+                      ? "text-gray-400 hover:text-gray-600"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  Explore
+                </Link>
+                <Image
+                  src={searchIcon}
+                  alt="Search Icon"
+                  width={20}
+                  height={20}
+                />
               </div>
 
               <PrivyButton />

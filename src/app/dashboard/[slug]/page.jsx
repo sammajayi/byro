@@ -25,6 +25,7 @@ import Reminder from "./Reminder";
 import Image from "next/image";
 import { Providers } from "@/redux/Providers";
 import { useSelector } from "react-redux";
+import axiosInstance from "@/utils/axios";
 
 export default function EventDashboard() {
   const params = useParams();
