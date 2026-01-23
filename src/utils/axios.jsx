@@ -3,7 +3,7 @@ import axios from "axios";
 const axiosInstance = axios.create({
   // baseURL: process.env.NEXT_PUBLIC_API_URL,
   // baseURL: "https://byro.onrender.com/api/",
-  baseURL: "https://byro-32ux.onrender.com/api/",
+  baseURL: "http://127.0.0.1:8000/api/",
 
   headers: {
     "Content-Type": "application/json",

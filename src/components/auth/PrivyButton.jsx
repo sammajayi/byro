@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrivy, useIdentityToken, useLogin } from "@privy-io/react-auth";
+import { usePrivy, useLogin, getAccessToken } from "@privy-io/react-auth";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import API from "../../services/api";
@@ -13,7 +13,7 @@ import { clearSupabaseSession } from "@/utils/supabaseAuth";
 
 export default function AuthButton() {
   const { user: reduxUser, token, isAuthenticated } = useSelector((state) => state.auth);
-  const { ready, authenticated, user, logout } = usePrivy();
+  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,14 +22,14 @@ export default function AuthButton() {
 
 
   const handleLoginComplete = useCallback(
-    async ({ user }) => {
+    async ({ user, isNewUser }) => {
       // Check if already authenticated in Redux
       if (isAuthenticated && token) {
         console.log("Already authenticated in Redux, skipping backend call");
         return;
       }
 
-      if (!user?.email?.address || !user?.id) {
+      if (!user?.id) {
         toast.error("Missing user data");
         return;
       }
@@ -43,25 +43,39 @@ export default function AuthButton() {
 
       try {
         setLoading(true);
+        
+        // Get Privy access token (this is the token backend will verify)
+        console.log("Getting Privy access token...");
+        const privyAccessToken = await getAccessToken();
+        
+        if (!privyAccessToken) {
+          toast.error("Failed to get authentication token");
+          console.error("No Privy access token received");
+          return;
+        }
 
-     
+        console.log("Sending Privy token to backend for verification...");
+        
+        // Send Privy token to backend for verification
         const response = await axiosInstance.post(
           "/auth/privy/",
           {
-            email: user.email.address,
-            id: user.id,
+            privy_access_token: privyAccessToken,
+            token: privyAccessToken, // Fallback field name
+            email: user?.email?.address, // Send email if available to avoid API call
           },
           {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-
             timeout: 10000,
           }
         );
 
         if (response.status === 200 && response.data) {
+          console.log("Backend authentication successful");
+          
           // Extract access token from tokens object
           const tokens = response.data.tokens;
           const accessToken = tokens?.access || tokens?.access_token || tokens;
@@ -75,11 +89,17 @@ export default function AuthButton() {
               token: tokens, // Store full tokens object for refresh token if needed
             })
           );
+          
           toast.success(response.data.message || "Successfully signed in!");
 
-          // router.push("/events");
+          // Navigate based on whether it's a new user
+          if (isNewUser) {
+            setTimeout(() => router.push("/profile"), 1000);
+          } else {
+            setTimeout(() => router.push("/events"), 1000);
+          }
         } else {
-          toast.error("Failed to save user data");
+          toast.error("Failed to authenticate");
           console.error("Unexpected response:", response);
           return;
         }
@@ -91,10 +111,12 @@ export default function AuthButton() {
         });
 
         // Handle specific error cases
-        if (error.response?.status === 500) {
+        if (error.response?.status === 401) {
+          toast.error(error.response.data?.error || "Authentication failed. Please try again.");
+        } else if (error.response?.status === 500) {
           toast.error("Server error. Please try again later.");
         } else if (error.response?.status === 400) {
-          toast.error(error.response.data?.message || "Invalid user data");
+          toast.error(error.response.data?.error || "Invalid authentication data");
         } else {
           toast.error("Failed to complete sign in. Please try again.");
         }
@@ -104,7 +126,7 @@ export default function AuthButton() {
         setLoading(false);
       }
     },
-    [dispatch, isAuthenticated, token]
+    [dispatch, isAuthenticated, token, getAccessToken, router]
   );
 
   const { login } = useLogin({

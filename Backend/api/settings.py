@@ -12,13 +12,18 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import Config, RepositoryEnv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from pathlib import Path
+from decouple import Config, RepositoryEnv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+config = Config(RepositoryEnv(BASE_DIR / ".env"))
 
-from decouple import config
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = 'django-insecure-k%pbsf-0fn&$pbh@%zt6ps=+unneeym49)*&o#l5$u^b%4_(ke'
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 from dotenv import load_dotenv

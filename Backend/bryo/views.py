@@ -385,56 +385,117 @@ class WaitListViewSet(viewsets.ModelViewSet):
 
 @csrf_exempt
 def privy_login(request):
+    """
+    Authenticate user using Privy token (identity_token or privy_access_token).
+    Backend verifies the token and creates/updates user record.
+    """
     if request.method == 'POST':
         try:
-            try:
-                data = json.loads(request.body)
-                
-                email_data = data.get('email')
-                if isinstance(email_data, dict):
-                    email = email_data.get('address')
-                else:
-                    email = email_data
-                
-                privy_id = data.get('id') or data.get('privy_id')
-                
-            except json.JSONDecodeError:
-                return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            data = json.loads(request.body)
             
-            if not email:
-                return JsonResponse({'error': 'Email is required'}, status=400)
+            # Get the token - support multiple token field names
+            token = (
+                data.get('identity_token') or 
+                data.get('privy_access_token') or 
+                data.get('token') or
+                data.get('accessToken')
+            )
+            
+            if not token:
+                return JsonResponse({
+                    'error': 'Privy token is required',
+                    'details': 'Please provide identity_token or privy_access_token'
+                }, status=400)
+            
+            # Verify the Privy token using PrivyAuthService
+            logger.info("Verifying Privy token...")
+            decoded_token = PrivyAuthService.verify_token(token)
+            
+            if not decoded_token:
+                logger.error("Privy token verification failed")
+                return JsonResponse({
+                    'error': 'Invalid or expired Privy token',
+                    'details': 'Token verification failed. Please login again with Privy.'
+                }, status=401)
+            
+            # Extract user data from verified token
+            privy_id = decoded_token.get('sub')  # sub contains the did:privy:xxx
+            
             if not privy_id:
-                return JsonResponse({'error': 'Privy ID is required'}, status=400)
+                return JsonResponse({
+                    'error': 'Invalid token payload',
+                    'details': 'Token missing required user identifier'
+                }, status=400)
             
+            # Clean the privy ID (remove did:privy: prefix)
             clean_privy_id = privy_id.replace('did:privy:', '') if privy_id.startswith('did:privy:') else privy_id
             
+            # Try to get email from request body first (frontend can send it)
+            email = data.get('email')
+            
+            # If email not provided in request, try to fetch from Privy API
+            if not email:
+                logger.info(f"Email not in request, fetching user data for Privy ID: {privy_id}")
+                try:
+                    privy_user_data = PrivyAuthService.get_user_data(privy_id)
+                    
+                    if privy_user_data:
+                        # Extract email from linked accounts
+                        linked_accounts = privy_user_data.get('linked_accounts', [])
+                        for account in linked_accounts:
+                            if account.get('type') == 'email':
+                                email = account.get('address')
+                                break
+                except Exception as api_error:
+                    logger.warning(f"Could not fetch user data from Privy API: {api_error}")
+                    # Continue without email from API
+            
+            # If still no email, generate a temporary one based on privy_id
+            # User can update it later in their profile
+            if not email:
+                logger.info(f"No email found, creating user with Privy ID only: {clean_privy_id}")
+                email = f"{clean_privy_id}@privy.user"
+            
+            # Create or update user in database
             try:
                 with transaction.atomic():
                     try:
+                        # Try to find user by privy_id
                         user = User.objects.get(privy_id=clean_privy_id)
+                        # Update email if changed
                         if user.email != email:
+                            logger.info(f"Updating email for user {clean_privy_id}")
                             user.email = email
                             user.save()
                             
                     except User.DoesNotExist:
                         try:
+                            # Try to find user by email
                             user = User.objects.get(email=email)
+                            # Link privy_id to existing user
+                            logger.info(f"Linking Privy ID to existing user: {email}")
                             user.privy_id = clean_privy_id
                             user.save()
                             
                         except User.DoesNotExist:
+                            # Create new user
+                            logger.info(f"Creating new user: {email}")
                             user = User.objects.create_user(
                                 email=email,
                                 privy_id=clean_privy_id
                             )
 
-                    from django.contrib.auth.backends import ModelBackend
+                    # Set backend for authentication
                     user.backend = 'bryo.backends.EmailBackend'
                     
+                    # Login the user
                     login(request, user)
 
+                    # Generate JWT tokens
                     refresh = RefreshToken.for_user(user)
                     access_token = str(refresh.access_token)
+                    
+                    logger.info(f"Successfully authenticated user: {email}")
                     
                     return JsonResponse({
                         'success': True,
@@ -452,16 +513,18 @@ def privy_login(request):
                     })
                     
             except Exception as e:
-                print(f"User creation/login error: {e}")
+                logger.error(f"User creation/login error: {e}")
                 return JsonResponse({
                     'error': 'Failed to create/login user',
                     'debug': str(e)
                 }, status=500)
-            
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(f"General login error: {str(e)}")
+            logger.error(f"General login error: {str(e)}")
             return JsonResponse({
-                'error': 'An error occurred during login',
+                'error': 'An error occurred during authentication',
                 'debug': str(e)
             }, status=500)
     
