@@ -1,0 +1,6 @@
+tree a5065f3f06f010e070c0f8466e6bc670d0fa6549
+parent f03a43803dc30b0a9a409a2f78d9a0546b3bf2a5
+author Anuoluwapo25 <anuoluwapoali25@gmail.com> 1747337957 +0100
+committer Anuoluwapo25 <anuoluwapoali25@gmail.com> 1747337957 +0100
+
+Add venv file to .gitignore
