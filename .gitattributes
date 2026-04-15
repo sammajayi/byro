@@ -1,0 +1,2 @@
+frontend/.next/**/*.pack filter=lfs diff=lfs merge=lfs -text
+frontend/node_modules/**/*.node filter=lfs diff=lfs merge=lfs -text
