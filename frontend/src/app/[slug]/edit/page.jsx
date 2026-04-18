@@ -1,20 +1,27 @@
 "use client";
 
-import { useWeb3AuthConnect } from "@web3auth/modal/react";
-import { useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import EventCreationForm from "../../../components/events/EventCreationForm";
 import AppLayout from "@/layout/app";
 import API from "@/services/api";
 import { toast } from "react-toastify";
 
 export default function EditEventPage() {
-  const { connect, isConnected } = useWeb3AuthConnect();
+  const { ready, authenticated, login } = usePrivy();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Handle authentication
   useEffect(() => {
-    if (!isConnected) {
-      connect();
+    if (ready) {
+      if (!authenticated) {
+        login();
+      }
+      setIsLoading(false);
     }
-  }, [isConnected, connect]);
+  }, [ready, authenticated, router]);
 
   const handleEventCreated = async (eventData) => {
     try {
