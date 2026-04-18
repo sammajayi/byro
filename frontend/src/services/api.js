@@ -232,102 +232,38 @@ const API = {
   },
 
 
-  // Privy
-  authenticateWithPrivy: async ({ privy_id, email, privyAccessToken }) => {
+  // Privy Authentication
+  /**
+   * Authenticate user with Privy token
+   * Backend will verify the Privy token and create/update user
+   * @param {string} privyAccessToken - The Privy access token
+   * @param {string} email - Optional email to avoid Privy API call
+   * @returns {Promise} Backend JWT tokens and user data
+   */
+  authenticateWithPrivy: async (privyAccessToken, email = null) => { 
     try {
-      const response = await axiosInstance.post(
-        "/auth/privy/",
-        {
-          email,
-          privy_id,
-          
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Authorization": `Bearer ${privyAccessToken}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid authentication data";
-        throw new Error(errorMessage);
-      }
-      throw handleApiError(error);
-    }
-  },
-
-  getPrivyToken: async (accessToken) => { 
-    try {
-      const t = normalizeToken(accessToken);
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+      const payload = { 
+        privy_access_token: privyAccessToken,
+        token: privyAccessToken, // Fallback field name
       };
-      if (t) headers['Authorization'] = `Bearer ${t}`;
-
-      const response = await axiosInstance.post("/auth/privy/", { accessToken }, { headers });
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid access token";
-        throw new Error(errorMessage);
+      
+      // Include email if provided
+      if (email) {
+        payload.email = email;
       }
-      throw handleApiError(error);
-    }
-  },
-
-  getIdToken: async (identityToken) => {
-    try{
-      const t = normalizeToken(identityToken);
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-      if (t) headers['Authorization'] = `Bearer ${t}`;
-
-      const response = await axiosInstance.post('/auth/privy/', { identityToken }, { headers });
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid identity token";
-        throw new Error(errorMessage);
-      }
-      throw handleApiError(error);
-    }
-  },
-
-  // Web3Auth
-  authenticateWithWeb3Auth: async ({ user_id, email, name }) => {
-    try {
-      const response = await axiosInstance.post(
-        "/auth/web3auth/",
-        {
-          email,
-          user_id,
-          name,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+      
+      const response = await axiosInstance.post("/auth/privy/", payload, { 
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         }
-      );
-
-      // Store the auth token if provided
-      if (response.data?.access || response.data?.access_token) {
-        setAuthToken(response.data.access || response.data.access_token);
-      }
-
+      });
       return response.data;
     } catch (error) {
-      if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || "Invalid authentication data";
-        throw new Error(errorMessage);
+      if (error.response?.status === 401) {
+        throw new Error(error.response.data?.error || "Authentication failed");
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data?.error || "Invalid token");
       }
       throw handleApiError(error);
     }

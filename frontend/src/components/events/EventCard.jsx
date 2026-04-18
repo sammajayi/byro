@@ -3,12 +3,11 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { IoLocationSharp } from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { usePrivy } from "@privy-io/react-auth";
 
 const EventCard = ({ event }) => {
   const [imageError, setImageError] = useState(false);
-  const { token } = useSelector((state) => state.auth);
-  const authenticated = !!token;
+  const { ready, authenticated } = usePrivy();
 
   // Get image URL with fallback
   const getImageUrl = () => {

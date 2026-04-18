@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { LuCircleUserRound } from "react-icons/lu";
 import { MdLogout, MdOutlineNotificationsActive } from "react-icons/md";
 import { wallet } from "../assets";
-// Privy imports removed - using Web3Auth instead
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 
 const ProfileSettings = () => {

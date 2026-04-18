@@ -1,12 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Provider from "./web3auth/provider";
-// IMP START - SSR
-import { cookieToWeb3AuthState } from "@web3auth/modal";
+import AuthProvider from "./privy/AuthProvider";
 import { Providers } from "@/redux/Providers";
 import { Toaster } from 'sonner';
-import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,8 +30,6 @@ export const metadata: Metadata = {
     "event platform",
     "event ticketing",
     "event experience",
-    "discover communities",
-    "create memories",
   ],
   authors: [{ name: "Byro" }],
   creator: "Byro",
@@ -113,13 +108,11 @@ export const metadata: Metadata = {
   manifest: "/favicon_io/site.webmanifest",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const web3authInitialState = cookieToWeb3AuthState(headersList.get('cookie'));
   return (
     <html lang="en">
       <body
@@ -129,15 +122,16 @@ export default async function RootLayout({
           position="top-right"
           richColors
           duration={3000}
+         
         />
 
-        <Provider web3authInitialState={web3authInitialState}>
+        <AuthProvider>
           <Providers>
             <div className="flex flex-col min-h-screen">
               <main className="flex-1">{children}</main>
             </div>
           </Providers>
-        </Provider>
+        </AuthProvider>
       </body>
     </html>
   );
