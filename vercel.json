@@ -1,14 +1,4 @@
 {
-
-    "projects": [
-      {
-        "name": "byro",
-        "rootDirectory": "frontend"
-      },
-      {
-        "name": "backend",
-        "rootDirectory": "Backend"
-      }
-    ]
-  
+  "name": "byro",
+  "rootDirectory": "frontend"
 }
