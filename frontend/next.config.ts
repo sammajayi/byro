@@ -1,27 +1,39 @@
-import type { NextConfig } from 'next'
-import withBundleAnalyzer from '@next/bundle-analyzer'
+import type { NextConfig } from 'next';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
-})
+});
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  turbopack: {
+    root: __dirname, 
+  },
   images: {
-    domains: [
-      'byro-32ux.onrender.com',
-      'byro.onrender.com',
-      'localhost',
-     'byro.africa'
-    ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'byro-32ux.onrender.com',
         pathname: '/**',
       },
+    
+      {
+        protocol: 'https',
+        hostname: 'byro.onrender.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'byro.africa',
+        pathname: '/**',
+      },
     ],
   },
-}
+};
 
-export default withAnalyzer(nextConfig)
+export default withAnalyzer(nextConfig);
