@@ -23,7 +23,7 @@ const Navbar = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const { user, token } = useSelector((state) => state.auth);
-  const {authenticated} = useWeb3AuthConnect
+  const {authenticated} = useWeb3AuthConnect()
 
   // After Web3Auth connects, exchange idToken for Django JWT
   const handleSignIn = async () => {
