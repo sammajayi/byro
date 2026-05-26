@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useWeb3AuthConnect, useIdentityToken } from "@web3auth/modal/react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { usePathname } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import API from "@/services/api";
 import SignupButton from "./SignupButton";
 import { signOut, authSuccess } from "@/redux/auth/authSlice";
@@ -23,8 +23,7 @@ const Navbar = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const { user, token } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
-  const authenticated = !!token;
+  const {authenticated} = useWeb3AuthConnect()
 
   // After Web3Auth connects, exchange idToken for Django JWT
   const handleSignIn = async () => {
@@ -117,7 +116,7 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    dispatch(signOut());
+    await logout();
     setIsProfileDropdownOpen(false);
   };
 
@@ -205,9 +204,11 @@ const Navbar = () => {
                 </div>
 
                 <div className="flex items-center space-x-3">
+
+            
                   <button
-                    onClick={() => connect()}
-                    className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg cursor-pointer"
+                   onClick={() => connect()}
+                    className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg"
                   >
                     Sign In
                   </button>

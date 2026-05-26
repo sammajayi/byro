@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { IoLocationSharp } from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { useWeb3AuthConnect, useIdentityToken } from "@web3auth/modal/react";
+
 
 const EventCard = ({ event }) => {
   const [imageError, setImageError] = useState(false);
-  const { token } = useSelector((state) => state.auth);
-  const authenticated = !!token;
+  const { ready, authenticated } = useWeb3AuthConnect();
 
   // Get image URL with fallback
   const getImageUrl = () => {
