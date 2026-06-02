@@ -79,11 +79,19 @@ class Web3AuthService(AuthProviderService):
         """Return normalised user fields from a verified Web3Auth payload."""
         external_id = decoded.get("sub", "")
 
-        # Wallet-connector tokens have no sub — use wallet address instead
+        # Wallet-connector tokens have no sub — fall back to wallet identifiers.
+        # External wallets use "address"; Web3Auth app keys use "public_key".
         if not external_id:
             wallets = decoded.get("wallets", [])
             if wallets:
-                external_id = wallets[0].get("address", "")
+                wallet = wallets[0]
+                external_id = (
+                    wallet.get("address") or
+                    wallet.get("public_key") or
+                    ""
+                )
+
+        logger.info(f"[Web3Auth] token keys={list(decoded.keys())} external_id={external_id!r}")
 
         email = decoded.get("email")
         name = decoded.get("name") or decoded.get("aggregateVerifier")
