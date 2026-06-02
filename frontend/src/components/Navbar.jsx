@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useWeb3AuthConnect, useIdentityToken } from "@web3auth/modal/react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { usePathname } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import API from "@/services/api";
 import SignupButton from "./SignupButton";
 import { signOut, authSuccess } from "@/redux/auth/authSlice";
@@ -17,11 +17,12 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const { connect, loading: connectLoading } = useWeb3AuthConnect();
+  const { connect, disconnect, loading: connectLoading } = useWeb3AuthConnect();
   const { getIdentityToken } = useIdentityToken();
   const pathname = usePathname();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
+  const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
   const {authenticated} = useWeb3AuthConnect()
 
@@ -116,7 +117,8 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    await disconnect();
+    dispatch(signOut());
     setIsProfileDropdownOpen(false);
   };
 
@@ -207,10 +209,11 @@ const Navbar = () => {
 
             
                   <button
-                   onClick={() => connect()}
-                    className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+                    onClick={handleSignIn}
+                    disabled={connectLoading}
+                    className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Sign In
+                    {connectLoading ? "Connecting..." : "Sign In"}
                   </button>
 
                   <button
