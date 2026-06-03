@@ -1,26 +1,19 @@
 "use client";
-import { useState } from "react";
 import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
 import CryptoPayment from "../../public/images/crypto-wallet.svg";
 import CardPayment from "../../public/images/card-payment.svg";
 
-export default function PaymentMethod() {
-  const [selected, setSelected] = useState("wallet");
-
-  const handleSelect = (method) => {
-    setSelected(method);
-  };
-
+export default function PaymentMethod({ selectedMethod, onSelect }) {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="grid gap-4">
         {/* Connect Wallet */}
         <div
-          onClick={() => handleSelect("wallet")}
-          className={`cursor-pointer border rounded-2xl p-5 items-center justify-between transition 
+          onClick={() => onSelect("wallet")}
+          className={`cursor-pointer border rounded-2xl p-5 items-center justify-between transition
             ${
-              selected === "wallet"
+              selectedMethod === "wallet"
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-200 hover:border-blue-300"
             }
@@ -59,7 +52,6 @@ export default function PaymentMethod() {
             <div className="flex gap-2 mt-2 text-xs text-gray-600 justify-between">
               <div className="flex items-center gap-1">
                 <BadgeCheck className="h-5 w-5 text-green-500" />
-
                 <span className="px-2 py-1  rounded-lg">Decentralized</span>
               </div>
 
@@ -78,10 +70,10 @@ export default function PaymentMethod() {
 
         {/* Paystack */}
         <div
-          onClick={() => handleSelect("paystack")}
-          className={`cursor-pointer border rounded-2xl p-5 flex items-center justify-between transition 
+          onClick={() => onSelect("paystack")}
+          className={`cursor-pointer border rounded-2xl p-5 flex items-center justify-between transition
             ${
-              selected === "paystack"
+              selectedMethod === "paystack"
                 ? "border-green-500 bg-green-50"
                 : "border-gray-200 hover:border-green-300"
             }
@@ -92,7 +84,7 @@ export default function PaymentMethod() {
               <div>
                 <Image
                   src={CardPayment}
-                  alt="Crypto wallet"
+                  alt="Paystack"
                   width={48}
                   height={48}
                   className="rounded-lg"
@@ -120,7 +112,6 @@ export default function PaymentMethod() {
             <div className="flex gap-2 mt-2 text-xs text-gray-600 justify-between">
               <div className="flex items-center gap-1">
                 <BadgeCheck className="h-5 w-5 text-green-500" />
-
                 <span className="px-2 py-1  rounded-lg">Bank Transfer</span>
               </div>
 

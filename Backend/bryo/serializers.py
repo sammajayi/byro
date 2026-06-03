@@ -126,15 +126,20 @@ class EventCoHostSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     owner_email = serializers.EmailField(source='owner.email', read_only=True)
     cohosts = EventCoHostSerializer(many=True, read_only=True, source='eventcohost_set')
-    
-    # New: Role information for the current user
+
+    # Role information for the current user
     role = serializers.SerializerMethodField()
-    
+
     # Category display name
     category_display = serializers.CharField(source='get_category_display', read_only=True)
-    
+
     # Event image URL
     event_image_url = serializers.SerializerMethodField()
+
+    # Optional fields that may not be sent by the client
+    capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    location = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    description = serializers.CharField(required=False, allow_blank=True)
     
     class Meta:
         model = Event
@@ -147,7 +152,7 @@ class EventSerializer(serializers.ModelSerializer):
             'is_active', 'created_at', 'updated_at',
             'cohosts', 'role' 
         ]
-        read_only_fields = ['id', 'slug', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'slug', 'owner', 'is_active', 'created_at', 'updated_at']
     
     def get_role(self, obj):
         """

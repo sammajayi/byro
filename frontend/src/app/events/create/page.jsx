@@ -31,7 +31,6 @@ export default function CreateEventPage() {
           connect();
           throw new Error("Not authenticated");
         }
-        API.setAuthToken(token);
 
         const created = await API.createEvent(eventData);
         console.log("Event created", created);

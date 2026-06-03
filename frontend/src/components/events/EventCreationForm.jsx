@@ -31,15 +31,7 @@ export default function EventCreationForm() {
   const router = useRouter();
   const fileInputRef = useRef(null);
   
-  // Get token from Redux state
   const { token } = useSelector((state) => state.auth);
-  
-  // Ensure token is set in API before making requests
-  useEffect(() => {
-    if (token) {
-      API.setAuthToken(token);
-    }
-  }, [token]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handleImageClick = useCallback(() => {
@@ -130,8 +122,15 @@ export default function EventCreationForm() {
       if (token) {
         API.setAuthToken(token);
       } else {
-        // Try to get token from localStorage as fallback
-        const storedToken = localStorage.getItem("authToken") || localStorage.getItem("token");
+        let storedToken = localStorage.getItem("authToken");
+        if (!storedToken) {
+          try {
+            const raw = localStorage.getItem("token");
+            storedToken = raw ? JSON.parse(raw) : null;
+          } catch {
+            storedToken = null;
+          }
+        }
         if (storedToken) {
           API.setAuthToken(storedToken);
         } else {
@@ -236,19 +235,19 @@ export default function EventCreationForm() {
     if (!eventSlug) return "";
     return `${
       typeof window !== "undefined" ? window.location.origin : ""
-    }/events/${eventSlug}/register`;
+    }/event-registration/${eventSlug}`;
   }, [eventSlug]);
 
   // Memoize navigation handlers
   const handleViewEvent = useCallback(() => {
     if (eventSlug) {
-      router.push(`/events/${eventSlug}?preview=true`);
+      router.push(`/${eventSlug}?preview=true`);
     }
   }, [eventSlug, router]);
 
   const handleRegisterEvent = useCallback(() => {
     if (eventSlug) {
-      router.push(`/events/${eventSlug}/register`);
+      router.push(`/event-registration/${eventSlug}`);
     }
   }, [eventSlug, router]);
 
@@ -846,20 +845,20 @@ export default function EventCreationForm() {
           <div className="space-y-6">
             <div>
               <h4 className="font-medium text-blue-700 mb-2">
-                Event Preview Link:
+                Event Page Link:
               </h4>
-              <div className="flex items consultato -center">
+              <div className="flex items-center">
                 <input
                   type="text"
                   value={getEventViewLink}
                   readOnly
                   className="flex-1 p-2 border border-blue-200 rounded-l-lg bg-white text-black"
-                  aria-label="Event preview link"
+                  aria-label="Event page link"
                 />
                 <button
                   onClick={() => copyToClipboard(getEventViewLink)}
                   className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
-                  aria-label="Copy event preview link"
+                  aria-label="Copy event page link"
                 >
                   Copy
                 </button>
@@ -870,6 +869,34 @@ export default function EventCreationForm() {
                 aria-label="View event page"
               >
                 View Event Page
+              </button>
+            </div>
+            <div>
+              <h4 className="font-medium text-blue-700 mb-2">
+                Registration Link (share with attendees):
+              </h4>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={getEventRegisterLink}
+                  readOnly
+                  className="flex-1 p-2 border border-blue-200 rounded-l-lg bg-white text-black"
+                  aria-label="Event registration link"
+                />
+                <button
+                  onClick={() => copyToClipboard(getEventRegisterLink)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-r-lg hover:bg-green-600"
+                  aria-label="Copy registration link"
+                >
+                  Copy
+                </button>
+              </div>
+              <button
+                onClick={handleRegisterEvent}
+                className="mt-2 w-full bg-green-600 text-white text-center py-2 px-4 rounded-lg hover:bg-green-700"
+                aria-label="Go to registration page"
+              >
+                Go to Registration Page
               </button>
             </div>
           </div>

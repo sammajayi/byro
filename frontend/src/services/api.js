@@ -3,13 +3,21 @@ import axiosInstance from "../utils/axios";
 // Unified error handler
 const handleApiError = (error) => {
   if (error.response) {
-    console.error("API Error Response:", {
-      status: error.response.status,
-      data: error.response.data,
-    });
-    throw Error(
-      error.response.data?.message || "An unexpected error occurred"
-    );
+    const data = error.response.data;
+    console.error("API Error Response:", { status: error.response.status, data });
+
+    // DRF returns errors as { detail: "..." } or { field: ["msg", ...] }
+    const message =
+      data?.message ||
+      data?.detail ||
+      (typeof data === "object"
+        ? Object.entries(data)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+            .join(" | ")
+        : null) ||
+      "An unexpected error occurred";
+
+    throw new Error(message);
   } else if (error.request) {
     console.error("API No Response:", error.request);
     throw new Error("No response from server. Please check your connection.");
@@ -56,17 +64,9 @@ const API = {
   setAuthToken,
 
   // ===== EVENTS =====
-  createEvent: async (formData, accessToken) => {
+  createEvent: async (formData) => {
     try {
       console.log("Sending form data to API:", formData);
-
-      // prefer explicit accessToken, else try stored token
-      const t = normalizeToken(accessToken) || normalizeToken(localStorage.getItem("authToken"));
-
-      // if we have a token, ensure axios defaults are set (keeps logs consistent)
-      if (t) {
-        setAuthToken(t);
-      }
 
       // Ensure we're always using FormData for file uploads
       let body;
@@ -103,7 +103,7 @@ const API = {
       }
 
       // Send with FormData - axios will automatically set Content-Type with boundary
-      const response = await axiosInstance.post("/events/", body, {
+      const response = await axiosInstance.post("events/", body, {
         headers: {
           // Don't set Content-Type - axios will set it automatically as:
           // Content-Type: multipart/form-data; boundary=----WebKitFormBoundary...
@@ -120,7 +120,7 @@ const API = {
 
   getEvent: async (slug) => {
     try {
-      const response = await axiosInstance.get(`/events/${slug}/`);
+      const response = await axiosInstance.get(`events/${slug}/`);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -129,7 +129,7 @@ const API = {
 
   getEventBySlug: async (slug) => {
     try {
-      const response = await axiosInstance.get(`/events/${slug}/`);
+      const response = await axiosInstance.get(`events/${slug}/`);
       return response.data;
     } catch (error) {
       console.error('Error fetching event by slug:', error);
@@ -139,7 +139,7 @@ const API = {
 
   getEvents: async () => {
     try {
-      const response = await axiosInstance.get("/events/");
+      const response = await axiosInstance.get("events/");
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -150,12 +150,12 @@ const API = {
   registerEvent: async (eventSlug, userData) => {
     try {
       console.log("Registration request details:", {
-        url: `/events/${eventSlug}/register/`,
+        url: `events/${eventSlug}/register/`,
         userData
-      }); 
+      });
       
       const response = await axiosInstance.post(
-        `/events/${eventSlug}/register/`,
+        `events/${eventSlug}/register/`,
         {
           name: userData.name,
           email: userData.email
@@ -169,7 +169,7 @@ const API = {
         data: error.response?.data,
         message: error.message,
         requestData: {
-          url: `/events/${eventSlug}/register/`,
+          url: `events/${eventSlug}/register/`,
           userData
         }
       });
@@ -188,7 +188,7 @@ const API = {
   // Update an event
   updateEvent: async (slug, formData) => {
     try {
-      const response = await axiosInstance.put(`/events/${slug}/`, formData, {
+      const response = await axiosInstance.put(`events/${slug}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -204,7 +204,7 @@ const API = {
   transferTicket: async (ticketId, transferData) => {
     try {
       const response = await axiosInstance.post(
-        `/${ticketId}/transfer/`,
+        `tickets/${ticketId}/transfer/`,
         transferData
       );
       return response.data;
@@ -215,7 +215,7 @@ const API = {
 
   cancelRegistration: async (ticketId) => {
     try {
-      const response = await axiosInstance.delete(`/tickets/${ticketId}/`);
+      const response = await axiosInstance.delete(`tickets/${ticketId}/`);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -224,7 +224,7 @@ const API = {
 
   getTicket: async (ticketId) => {
     try {
-      const response = await axiosInstance.get(`/tickets/${ticketId}/`);
+      const response = await axiosInstance.get(`tickets/${ticketId}/`);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -252,7 +252,7 @@ const API = {
         payload.email = email;
       }
       
-      const response = await axiosInstance.post("/auth/privy/", payload, { 
+      const response = await axiosInstance.post("auth/privy/", payload, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -269,10 +269,34 @@ const API = {
     }
   },
 
+  // ===== PAYMENTS =====
+  initializePayment: async ({ event_slug, customer_email, customer_name, quantity = 1 }) => {
+    try {
+      const response = await axiosInstance.post("payments/initialize/", {
+        event_slug,
+        customer_email,
+        customer_name,
+        quantity,
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyPayment: async (reference) => {
+    try {
+      const response = await axiosInstance.get(`payments/verify/${reference}/`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   // Waitlist
   joinWaitlist: async (data) => {
     try {
-      const response = await axiosInstance.post("/waitlist/", {
+      const response = await axiosInstance.post("waitlist/", {
         email: data.email,
         source: "website"
       }, {

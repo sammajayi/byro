@@ -1,9 +1,25 @@
-import React from "react";
+"use client";
+
 import Image from "next/image";
 import { Sparkle } from "../app/assets/index";
+import { useWeb3AuthConnect } from "@web3auth/modal/react";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
 
 const HeroPage = () => {
+  const { connect } = useWeb3AuthConnect();
+  const { token } = useSelector((state: any) => state.auth);
+  const router = useRouter();
+
+  const handleGetStarted = async () => {
+    if (token) {
+      router.push("/events");
+      return;
+    }
+    await connect();
+  };
+
   return (
     <main className="bg-white pt-8 sm:pt-12 position: relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 text-center space-y-4 sm:space-y-6">
@@ -14,6 +30,8 @@ const HeroPage = () => {
             <Image
               src={Sparkle}
               alt="sparkle"
+              width={24}
+              height={24}
               className="w-[16px] h-[16px] sm:w-[24px] sm:h-[24px] flex-shrink-0"
               priority
             />
@@ -37,7 +55,7 @@ const HeroPage = () => {
         </div>
 
         <div className="pt-2 sm:pt-4">
-          <button aria-label="Get Started" className="bg-[#1F6BFF] text-white py-2.5 sm:py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg hover:bg-blue-700 transition-colors">
+          <button onClick={handleGetStarted} aria-label="Get Started" className="bg-[#1F6BFF] text-white py-2.5 sm:py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg hover:bg-blue-700 transition-colors">
             Create an account
           </button>
         </div>

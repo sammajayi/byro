@@ -62,7 +62,7 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
     
     
     def get_permissions(self):
-        if self.action in ['webhook', 'verify_payment']:
+        if self.action in ['webhook', 'verify_payment', 'initialize_payment']:
             return [AllowAny()]
         return [IsAuthenticated()]
     
@@ -129,7 +129,7 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
             }, status=status.HTTP_201_CREATED)
         
         # Initialize Paystack payment
-        paystack_secret_key = settings.PAYSTACK_SECRET_KEY
+        paystack_secret_key = settings.PAYSTACK_SECRET_KEY.strip()
         paystack_url = 'https://api.paystack.co/transaction/initialize'
         
         # Generate unique reference
@@ -148,7 +148,7 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
                 'customer_name': customer_name,
                 'quantity': quantity,
             },
-            'callback_url': f"{settings.FRONTEND_URL}/payment/callback"
+            'callback_url': settings.PAYSTACK_CALLBACK_URL
         }
         
         headers = {
@@ -209,7 +209,7 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
         """
         Verify a Paystack payment and create ticket(s) if successful
         """
-        paystack_secret_key = settings.PAYSTACK_SECRET_KEY
+        paystack_secret_key = settings.PAYSTACK_SECRET_KEY.strip()
         paystack_url = f'https://api.paystack.co/transaction/verify/{reference}'
         
         headers = {
@@ -295,8 +295,8 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
         Handle Paystack webhook events
         Verifies webhook signature and processes payment events
         """
-        paystack_secret_key = settings.PAYSTACK_SECRET_KEY
-        
+        paystack_secret_key = settings.PAYSTACK_SECRET_KEY.strip()
+
         signature = request.headers.get('X-Paystack-Signature')
         
         if not signature:
