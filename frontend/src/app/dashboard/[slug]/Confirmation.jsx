@@ -1,77 +1,70 @@
-import React, { useState } from "react";
-import { UserPlus, Check, X } from "lucide-react";
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { UserPlus, Check, X, Search } from "lucide-react";
+import API from "../../../services/api";
+import { toast } from "sonner";
 
-const Confirmation = () => {
-  const [attendeesData, setAttendeesData] = useState([
-    {
-      id: 1,
-      name: "Francis David",
-      email: "disual@byro.africa",
-      status: "waitlisted", // waitlisted, going, not_going
-    },
-    {
-      id: 2,
-      name: "Robert Okechukwu",
-      email: "roke@byro.africa",
-      status: "waitlisted",
-    },
-    {
-      id: 3,
-      name: "Kira d Great",
-      email: "kira@byro.africa",
-      status: "waitlisted",
-    },
-    {
-      id: 4,
-      name: "Temitope",
-      email: "temi@byro.africa",
-      status: "waitlisted",
-    },
-    {
-      id: 5,
-      name: "Caleb",
-      email: "caleb@byro.africa",
-      status: "waitlisted",
-    },
-    {
-      id: 6,
-      name: "Samuel Ajayi",
-      email: "Ajaece@tyms.com",
-      status: "waitlisted",
-    },
-  ]);
+export default function Confirmation() {
+  const { slug } = useParams();
+  const [attendees, setAttendees] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const waitlistCount = attendeesData.filter(
-    (attendee) => attendee.status === "waitlisted"
-  ).length;
-  const goingCount = attendeesData.filter(
-    (attendee) => attendee.status === "going"
-  ).length;
-  const notGoingCount = attendeesData.filter(
-    (attendee) => attendee.status === "not_going"
-  ).length;
+  useEffect(() => {
+    if (!slug) return;
+    // Fetch all tickets including pending (waitlisted)
+    API.getEventAttendees(slug, { payment_status: "all" })
+      .then((data) => {
+        // Map tickets to confirmation entries
+        const mapped = (data.attendees || []).map((t) => ({
+          id: t.ticket_id,
+          name: t.current_owner_name || t.original_owner_name || "",
+          email: t.current_owner_email || t.original_owner_email || "",
+          // pending = waitlisted, paid/free = going
+          status:
+            t.payment_status === "paid" || t.payment_status === "free"
+              ? "going"
+              : "waitlisted",
+          payment_status: t.payment_status,
+        }));
+        setAttendees(mapped);
+      })
+      .catch((err) => {
+        console.error("Error loading attendees:", err);
+        toast.error("Failed to load attendees");
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
 
-  const filteredAttendees = attendeesData.filter(
-    (attendee) =>
-      attendee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      attendee.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const waitlistCount = attendees.filter((a) => a.status === "waitlisted").length;
+  const goingCount = attendees.filter((a) => a.status === "going").length;
+  const notGoingCount = attendees.filter((a) => a.status === "not_going").length;
+
+  const filtered = attendees.filter(
+    (a) =>
+      a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const updateAttendeeStatus = (attendeeId, newStatus) => {
-    setAttendeesData((prev) =>
-      prev.map((attendee) =>
-        attendee.id === attendeeId
-          ? { ...attendee, status: newStatus }
-          : attendee
-      )
+  const updateStatus = (id, newStatus) => {
+    setAttendees((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
     );
   };
 
+  if (loading) {
+    return (
+      <div className="p-4 flex justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      {/* Stats Section */}
+      {/* Stats */}
       <div className="flex justify-start mb-6">
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div className="flex justify-center space-x-8">
@@ -82,7 +75,7 @@ const Confirmation = () => {
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Waitlist</p>
               </div>
-              <p className="text-gray-900 font-bold text-xl">35</p>
+              <p className="text-gray-900 font-bold text-xl">{waitlistCount}</p>
             </div>
 
             <div className="flex flex-col items-center space-y-2">
@@ -106,91 +99,87 @@ const Confirmation = () => {
             </div>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="ml-6 flex flex-col space-y-2">
-          <button className="bg-[#007AFF] hover:bg-[#0056CC] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200 shadow-sm text-sm">
-            Invite
-          </button>
-
-          <button className="bg-[#007AFF] hover:bg-[#0056CC] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200 shadow-sm text-sm">
-            Edit event
-          </button>
-        </div>
       </div>
 
-      {/* Header and Search */}
+      {/* Header + Search */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-gray-900 font-bold text-xl">Waitlist</h1>
-        </div>
-
+        <h1 className="text-gray-900 font-bold text-xl">Registrations</h1>
         <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4">
-            🔍
-          </div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-gray-50 border-0 pl-9 pr-3 py-2 rounded-lg text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all duration-200 w-64 text-sm"
+            className="bg-gray-50 border-0 pl-9 pr-3 py-2 rounded-lg text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-gray-300 w-64 text-sm"
             placeholder="search for attendee..."
           />
         </div>
       </div>
 
-      {/* Waitlist */}
+      {/* List */}
       <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
-        {filteredAttendees.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="text-center py-8">
             <h3 className="text-base font-semibold text-gray-900 mb-2">
-              No attendees found
+              {searchTerm ? "No attendees found" : "No registrations yet"}
             </h3>
-            <p className="text-gray-600 text-sm">
-              Try adjusting your search terms
+            <p className="text-gray-500 text-sm">
+              {searchTerm ? "Try adjusting your search" : "Attendees will appear here once they register."}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {filteredAttendees.map((attendee, index) => (
+            {filtered.map((attendee) => (
               <div
                 key={attendee.id}
-                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-150"
+                className="flex items-center justify-between p-4 hover:bg-gray-50"
               >
-                {/* Attendee Info */}
                 <div className="flex items-center space-x-3 flex-1">
                   <div className="w-8 h-8 bg-gradient-to-br from-[#007AFF] to-[#0056CC] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                    {attendee.name.charAt(0).toUpperCase()}
+                    {(attendee.name || "?").charAt(0).toUpperCase()}
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-gray-900 font-medium text-sm">
-                      {attendee.name}
-                    </h3>
-                  </div>
+                  <h3 className="text-gray-900 font-medium text-sm">{attendee.name}</h3>
                 </div>
 
-                {/* Email */}
                 <div className="flex-1 min-w-0 px-4">
                   <p className="text-gray-600 text-sm">{attendee.email}</p>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => updateAttendeeStatus(attendee.id, "going")}
-                    className="w-8 h-8 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white transition-colors duration-150"
+                <div className="flex items-center space-x-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      attendee.status === "going"
+                        ? "bg-green-100 text-green-700"
+                        : attendee.status === "not_going"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
                   >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      updateAttendeeStatus(attendee.id, "not_going")
-                    }
-                    className="w-8 h-8 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors duration-150"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                    {attendee.status === "going"
+                      ? "Going"
+                      : attendee.status === "not_going"
+                      ? "Not Going"
+                      : "Waitlist"}
+                  </span>
+
+                  {attendee.status === "waitlisted" && (
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => updateStatus(attendee.id, "going")}
+                        className="w-7 h-7 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white"
+                        title="Approve"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => updateStatus(attendee.id, "not_going")}
+                        className="w-7 h-7 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white"
+                        title="Decline"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -199,6 +188,4 @@ const Confirmation = () => {
       </div>
     </div>
   );
-};
-
-export default Confirmation;
+}

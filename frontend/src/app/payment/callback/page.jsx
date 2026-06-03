@@ -8,6 +8,7 @@ function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState("verifying"); // verifying | success | failed
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const reference = searchParams.get("reference") || searchParams.get("trxref");
@@ -38,7 +39,12 @@ function PaymentCallbackContent() {
           setStatus("failed");
         }
       })
-      .catch(() => setStatus("failed"));
+      .catch((err) => {
+        const msg = err?.response?.data?.error || err?.message || "Unknown error";
+        console.error("Verification failed:", msg, err?.response?.data);
+        setErrorMsg(msg);
+        setStatus("failed");
+      });
   }, [searchParams, router]);
 
   if (status === "verifying") {
@@ -69,6 +75,7 @@ function PaymentCallbackContent() {
       </div>
       <h2 className="text-2xl font-bold text-gray-900">Payment Failed</h2>
       <p className="text-gray-600">Your payment could not be verified. Please try again.</p>
+      {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
       <button
         onClick={() => router.back()}
         className="mt-4 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"

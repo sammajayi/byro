@@ -106,10 +106,25 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear the invalid token
+      // Clear all auth tokens from localStorage
       localStorage.removeItem("accessToken");
-      // Let the component handle the authentication
-      return Promise.reject(error);
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("token");
+
+      // Clear Redux auth state and redirect to home
+      // Lazy-import to avoid circular deps at module load time
+      if (typeof window !== "undefined") {
+        import("../redux/store").then(({ store }) => {
+          import("../redux/auth/authSlice").then(({ signOut }) => {
+            store.dispatch(signOut());
+          });
+        });
+        // Only redirect if this was not already a login/auth request
+        const url = error.config?.url || "";
+        if (!url.includes("auth/") && !url.includes("token/")) {
+          window.location.href = "/";
+        }
+      }
     }
     return Promise.reject(error);
   }

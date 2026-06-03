@@ -109,11 +109,13 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
         amount = event.ticket_price * quantity
         
         # For free events, create ticket directly
+        linked_user = request.user if request.user.is_authenticated else None
         if amount == 0:
             tickets = []
             for _ in range(quantity):
                 ticket = Ticket.objects.create(
                     event=event,
+                    user=linked_user,
                     original_owner_name=customer_name,
                     original_owner_email=customer_email,
                     current_owner_name=customer_name,
@@ -178,7 +180,10 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
                     paystack_authorization_url=response_data['data'].get('authorization_url'),
                     status='pending',
                     ip_address=self.get_client_ip(request),
-                    metadata={'quantity': quantity}
+                    metadata={
+                        'quantity': quantity,
+                        'user_id': linked_user.id if linked_user else None,
+                    }
                 )
                 
                 return Response({
@@ -223,42 +228,72 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
             if response.status_code == 200 and response_data.get('status'):
                 transaction_data = response_data['data']
                 
-                payment = get_object_or_404(Payment, paystack_reference=reference)
-                
+                try:
+                    payment = Payment.objects.get(paystack_reference=reference)
+                except Payment.DoesNotExist:
+                    return Response({
+                        'error': 'Payment record not found. Please try initiating payment again.'
+                    }, status=status.HTTP_404_NOT_FOUND)
+
+                # Resolve which user to link tickets to:
+                # prefer the currently authenticated requester, fall back to
+                # the user_id stored in payment metadata at initialize time.
+                ticket_user = request.user if request.user.is_authenticated else None
+                if ticket_user is None:
+                    stored_uid = payment.metadata.get('user_id')
+                    if stored_uid:
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+                        ticket_user = User.objects.filter(pk=stored_uid).first()
+
                 if payment.status == 'successful':
+                    # Recover missing ticket if it wasn't created (e.g. due to prior bug)
+                    if payment.ticket is None:
+                        ticket = Ticket.objects.create(
+                            event=payment.event,
+                            user=ticket_user,
+                            original_owner_name=payment.customer_name,
+                            original_owner_email=payment.customer_email,
+                            current_owner_name=payment.customer_name,
+                            current_owner_email=payment.customer_email,
+                            payment_status='paid',
+                        )
+                        payment.ticket = ticket
+                        payment.save()
                     return Response({
                         'status': 'success',
                         'message': 'Payment already verified',
-                        'ticket': TicketSerializer(payment.ticket).data if payment.ticket else None
+                        'tickets': TicketSerializer([payment.ticket], many=True).data,
+                        'payment': PaymentSerializer(payment).data,
                     }, status=status.HTTP_200_OK)
-                
+
                 if transaction_data['status'] == 'success':
                     # Update payment record
                     payment.status = 'successful'
                     payment.channel = transaction_data.get('channel')
                     payment.paid_at = timezone.now()
                     payment.save()
-                    
+
                     # Create ticket(s)
                     quantity = payment.metadata.get('quantity', 1)
                     tickets = []
-                    
-                    for i in range(quantity):
+
+                    for _ in range(quantity):
                         ticket = Ticket.objects.create(
                             event=payment.event,
+                            user=ticket_user,
                             original_owner_name=payment.customer_name,
                             original_owner_email=payment.customer_email,
                             current_owner_name=payment.customer_name,
                             current_owner_email=payment.customer_email,
                             payment_status='paid',
-                            payment=payment if i == 0 else None  # Link first ticket to payment
                         )
                         tickets.append(ticket)
-                    
+
                     if tickets:
                         payment.ticket = tickets[0]
                         payment.save()
-                    
+
                     return Response({
                         'status': 'success',
                         'message': 'Payment verified successfully',
@@ -279,10 +314,6 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
                     'details': response_data.get('message', 'Unknown error')
                 }, status=status.HTTP_400_BAD_REQUEST)
                 
-        except Payment.DoesNotExist:
-            return Response({
-                'error': 'Payment record not found'
-            }, status=status.HTTP_404_NOT_FOUND)
         except requests.exceptions.RequestException as e:
             return Response({
                 'error': 'Payment gateway error',
@@ -333,20 +364,26 @@ class PaystackPaymentViewSet(viewsets.ViewSet):
                     
                     if not hasattr(payment, 'ticket') or payment.ticket is None:
                         quantity = payment.metadata.get('quantity', 1)
+                        stored_uid = payment.metadata.get('user_id')
+                        webhook_user = None
+                        if stored_uid:
+                            from django.contrib.auth import get_user_model
+                            User = get_user_model()
+                            webhook_user = User.objects.filter(pk=stored_uid).first()
                         tickets = []
-                        
-                        for i in range(quantity):
+
+                        for _ in range(quantity):
                             ticket = Ticket.objects.create(
                                 event=payment.event,
+                                user=webhook_user,
                                 original_owner_name=payment.customer_name,
                                 original_owner_email=payment.customer_email,
                                 current_owner_name=payment.customer_name,
                                 current_owner_email=payment.customer_email,
                                 payment_status='paid',
-                                payment=payment if i == 0 else None
                             )
                             tickets.append(ticket)
-                        
+
                         if tickets:
                             payment.ticket = tickets[0]
                             payment.save()

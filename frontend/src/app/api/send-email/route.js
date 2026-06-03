@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import { transporter, mailOptions } from "@/lib/mailer";
 import { TicketConfirmation } from "@/lib/emails/TicketConfirmation";
 import { PayoutRequest } from "@/lib/emails/PayoutRequest";
-
-// Debug: Log the imports
-console.log("TicketConfirmation:", TicketConfirmation);
-console.log("PayoutRequest:", PayoutRequest);
+import { EventReminder } from "@/lib/emails/EventReminder";
 
 const emailTemplates = {
   ticket: TicketConfirmation,
   payout: PayoutRequest,
+  reminder: EventReminder,
 };
 
 export async function POST(request) {
@@ -32,6 +30,8 @@ export async function POST(request) {
         template = emailTemplates[type](data.name, data.eventDetails);
       } else if (type === 'payout') {
         template = emailTemplates[type](data.name, data.amount);
+      } else if (type === 'reminder') {
+        template = emailTemplates[type](data.name, data.subject, data.message, data.eventName);
       }
 
       try {

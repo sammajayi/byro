@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Transfer, Schedule, Location, nft, schedule } from "../assets/index";
+import { Transfer, Location, nft, schedule } from "../assets/index";
 import Image from "next/image";
-import { ChevronLeft, Calendar, MapPin, Users, Ticket } from "lucide-react";
+import { Ticket } from "lucide-react";
 import RegisterModal from "../../components/auth/RegisterModal";
 import API from "../../services/api";
 import { toast } from "sonner";
@@ -23,9 +23,7 @@ const ViewEvent = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [imageError, setImageError] = useState(false);
-
-  console.log("Event Data:", useParams());
+  const [imageError] = useState(false);
 
   // Get image URL with fallback
   const getImageUrl = () => {
@@ -152,7 +150,10 @@ const ViewEvent = () => {
     const fetchEvent = async () => {
       try {
         setLoading(true);
-        const eventData = await API.getEvent(slug);
+        const [eventData, ticketData] = await Promise.all([
+          API.getEvent(slug),
+          API.getMyTicket(slug),
+        ]);
         if (eventData?.id || eventData?.slug) {
           setEvent(eventData);
           if (eventData.slug && eventData.slug !== slug) {
@@ -163,6 +164,10 @@ const ViewEvent = () => {
           }
         } else {
           throw new Error("Invalid event data received from server");
+        }
+        if (ticketData?.registered) {
+          setRegistered(true);
+          setTicketId(ticketData.ticket_id || null);
         }
       } catch (err) {
         console.error("Error fetching event:", err);
@@ -210,35 +215,179 @@ const ViewEvent = () => {
 
   if (!event) return null;
 
+  const ticketPrice = parseFloat(event?.ticket_price ?? 0);
+  const priceLabel = ticketPrice === 0 ? "Free" : `$${ticketPrice}`;
+  const attendeeCount = event?.attendee_count ?? 0;
+
   return (
     <Providers>
       <div className="relative min-h-screen bg-white">
         <Navbar />
 
-        {/* Header */}
-        <div className=" mt-6">
-          <div className="max-w-[90%] mx-auto p-4">
-            <div className="flex items-center">
-              <TbArrowBackUp
-                className="w-5 h-5 text-gray-600 mr-3 cursor-pointer"
-                onClick={() => router.back()}
+        {/* Main Content */}
+        <div className="max-w-[720px] mx-auto px-4 py-8">
+
+          {/* Hero Banner */}
+          <div className="relative w-full h-[240px] rounded-2xl overflow-hidden mb-6">
+            {event.event_image || event.event_image_url ? (
+              <img
+                src={event.event_image_url || getImageUrl()}
+                alt={event.name}
+                className="w-full h-full object-cover"
               />
-              <span
-                className="text-gray-600 text-sm cursor-pointer"
-                onClick={() => router.back()}
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900" />
+            )}
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            {/* Event name + host */}
+            <div className="absolute bottom-4 left-4">
+              <h1 className="text-white text-2xl font-bold leading-tight">{event.name}</h1>
+              <p className="text-white/80 text-sm mt-0.5">
+                Hosted by {event.hosted_by || event.owner_email || "Byro Africa"}
+              </p>
+            </div>
+            {/* Attendee badge */}
+            {attendeeCount > 0 && (
+              <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span className="text-white text-xs font-medium">{attendeeCount}+ Attendees</span>
+              </div>
+            )}
+            {/* Manage button for owner */}
+            {event?.role?.is_owner && (
+              <button
+                onClick={() => router.push(`/dashboard/${event.slug}`)}
+                className="absolute top-4 right-4 flex items-center gap-1.5 bg-[#1F6BFF] text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Back
-              </span>
+                Manage Event
+              </button>
+            )}
+          </div>
+
+          {/* Info Row */}
+          <div className="flex flex-wrap gap-6 mb-6 pb-6 border-b border-gray-100">
+            {/* Date / Time */}
+            <div className="flex items-center gap-3">
+              <Image src={schedule} alt="date" className="w-10 h-10" />
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">{formattedDate}</p>
+                <p className="text-gray-500 text-xs">
+                  {event.time_from && new Date(`1970-01-01T${event.time_from}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                  {event.time_to && ` to ${new Date(`1970-01-01T${event.time_to}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}`}
+                </p>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-center gap-3">
+              <Image src={Location} alt="location" className="w-10 h-10" />
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">{event.location || "TBD"}</p>
+                {event.address && <p className="text-gray-500 text-xs">{event.address}</p>}
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center rotate-12">
+                <Ticket className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">{priceLabel}</p>
+                <p className="text-gray-500 text-xs">
+                  {ticketPrice > 0 ? "USDC ON BASE" : "No charge"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="max-w-[90%] mx-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column */}
+          {/* About Event */}
+          <div className="mb-8">
+            <h2 className="font-bold text-gray-900 text-xl mb-3">About Event</h2>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {event.description || "No description provided."}
+            </p>
+          </div>
+
+          {/* Transfer ticket (if registered + transferable) */}
+          {registered && event.transferable && (
+            <div className="mb-6">
+              <button
+                onClick={handleTransferClick}
+                className="flex items-center gap-2 text-blue-600 text-sm font-medium"
+              >
+                <Image src={Transfer} alt="transfer" width={16} height={16} />
+                <span className="underline">Transfer Ticket</span>
+              </button>
+              {showTransferInput && (
+                <form onSubmit={handleTransferSubmit} className="mt-4 space-y-3 max-w-sm">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Recipient&apos;s Name</label>
+                    <input type="text" value={transferName} onChange={(e) => setTransferName(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="John Doe" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Recipient&apos;s Email</label>
+                    <input type="email" value={transferEmail} onChange={(e) => setTransferEmail(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="example@email.com" required />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Send</button>
+                    <button type="button" onClick={() => setShowTransferInput(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 px-8 py-3 rounded-full border-2 border-gray-300 text-gray-700 font-semibold text-sm hover:border-gray-400 transition-colors"
+            >
+              <TbArrowBackUp className="w-4 h-4" />
+              Back to Events
+            </button>
+
+            {registered ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => router.push(`/ticket-confirmation`)}
+                  className="px-8 py-3 rounded-full text-white font-semibold text-sm"
+                  style={{ background: "linear-gradient(90deg, #63D0A5 0%, #16B979 100%)" }}
+                >
+                  View Ticket
+                </button>
+                <button
+                  onClick={handleCancelRegistration}
+                  className="px-6 py-3 rounded-full border border-red-300 text-red-500 font-semibold text-sm hover:bg-red-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleRegister}
+                className="flex items-center gap-2 px-8 py-3 rounded-full text-white font-semibold text-sm"
+                style={{ background: "linear-gradient(90deg, #63D0A5 0%, #16B979 100%)" }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                {ticketPrice > 0 ? `Register Now - ${priceLabel}` : "Register Now - Free"}
+              </button>
+            )}
+          </div>
+
+          {/* old structure removed */}
+          <div style={{display:"none"}}>
             <div className="space-y-6">
-              {/* Event Title */}
               <div className=" rounded-lg p-1">
                 <div className="rounded-[20px] px-6 py-4 border border-[#8E8E93]">
                   <h1 className="text-[#007AFF] font-semibold text-[27px]">
@@ -520,16 +669,6 @@ const ViewEvent = () => {
                 </div>
               </div>
             </div>
-          </div>
-          {/* About Event */}
-          <div className="bg-white rounded-lg p-6">
-            <h2 className="font-bold text-gray-800 text-xl mb-4">
-              About Event
-            </h2>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              {event.description ||
-                "Lorem ipsum dolor sit amet consectetur. Sit elementum enim fermentum at tristique luctus vulputate tellus felis. Rhoncus amet commodo sit aliquam pretium. Sed lacus sed adipiscing sit magna mus eros sit. Lacus molestie in vivamus metus tincidunt. Sem diam neque amet gravida quis. At gravida diam sit lobortis purus sit nullam venenatis. Urna parturient quam integer consectetur in lacus nec. Purus vitae in tellus sit nulla nibh magna. Lacinia semper urna mi cursus libero malesuada eu sit."}
-            </p>
           </div>
         </div>
 

@@ -1,41 +1,64 @@
 "use client";
 
-import { useWeb3AuthConnect } from "@web3auth/modal/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import EventCreationForm from "../../../components/events/EventCreationForm";
 import AppLayout from "@/layout/app";
 import API from "@/services/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function EditEventPage() {
-  const { connect, isConnected } = useWeb3AuthConnect();
+  const { slug } = useParams();
+  const router = useRouter();
+  const [eventData, setEventData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isConnected) {
-      connect();
-    }
-  }, [isConnected, connect]);
+    if (!slug) return;
+    API.getEvent(slug)
+      .then((data) => {
+        // Check the user has permission to edit
+        if (!data?.role?.is_owner && !data?.role?.is_cohost) {
+          toast.error("You don't have permission to edit this event");
+          router.push(`/${slug}`);
+          return;
+        }
+        setEventData(data);
+      })
+      .catch(() => {
+        toast.error("Failed to load event");
+        router.push("/events");
+      })
+      .finally(() => setLoading(false));
+  }, [slug, router]);
 
-  const handleEventCreated = async (eventData) => {
-    try {
-      const response = await API.createEvent(eventData);
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" />
+        </div>
+      </AppLayout>
+    );
+  }
 
-      console.log("Event created:", response);
-      toast.success("Event created successfully!");
-      // router.push(`/events/${response.slug}`);
-    } catch (error) {
-      console.error("Error creating event:", error);
-      toast.error("Failed to create event");
-    }
-  };
+  if (!eventData) return null;
 
   return (
     <AppLayout>
       <div className="bg-white min-h-screen">
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <EventCreationForm onSuccess={handleEventCreated} />
+        <div className="max-w-5xl mx-auto px-4 py-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => router.push(`/dashboard/${slug}`)}
+              className="text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1"
+            >
+              ← Back
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">Edit Event</h1>
           </div>
+          <EventCreationForm editSlug={slug} initialData={eventData} />
         </div>
       </div>
     </AppLayout>

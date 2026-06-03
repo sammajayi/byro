@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import API from "../../services/api";
 
-export default function EventCreationForm() {
+export default function EventCreationForm({ editSlug = null, initialData = null }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [eventName, setEventName] = useState("");
@@ -33,6 +33,30 @@ export default function EventCreationForm() {
   
   const { token } = useSelector((state) => state.auth);
 
+  // Pre-fill form when editing an existing event
+  useEffect(() => {
+    if (!initialData) return;
+    const d = initialData;
+    setEventName(d.name || "");
+    setDate(d.day || "");
+    // Strip seconds from HH:MM:SS → HH:MM
+    setTimeFrom(d.time_from ? d.time_from.slice(0, 5) : "");
+    setTimeTo(d.time_to ? d.time_to.slice(0, 5) : "");
+    setPhysicalLocation(d.location || "");
+    setVirtualLink(d.virtual_link || "");
+    setDescription(d.description || "");
+    setTicketsTransferable(d.transferable || false);
+    setTicketPrice(
+      !d.ticket_price || parseFloat(d.ticket_price) === 0 ? "Free" : String(d.ticket_price)
+    );
+    setCapacity(d.capacity ? String(d.capacity) : "Unlimited");
+    setEventVisibility(d.visibility === "public");
+    setCategory(d.category || "other");
+    if (d.event_image_url || d.event_image) {
+      setImagePreview(d.event_image_url || d.event_image);
+    }
+  }, [initialData]);
+
   // Memoize handlers to prevent unnecessary re-renders
   const handleImageClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -42,7 +66,6 @@ export default function EventCreationForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log("Selected file:", file); // Debug log
 
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
@@ -55,13 +78,11 @@ export default function EventCreationForm() {
 
     setIsImageLoading(true);
     setEventImage(file);
-    console.log("Event image state set to:", file); // Debug log
 
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
       setIsImageLoading(false);
-      console.log("Image preview set"); // Debug log
     };
     reader.readAsDataURL(file);
   }, []);
@@ -112,9 +133,8 @@ export default function EventCreationForm() {
     capacity,
   ]);
 
-  // Memoize form submission handler
-  const handleSubmit = useCallback(
-    async (e) => {
+  // Not memoized — always closes over latest state to avoid stale closure issues
+  const handleSubmit = async (e) => {
       e.preventDefault();
       if (!validateForm()) return;
 
@@ -167,61 +187,37 @@ export default function EventCreationForm() {
 
         // Append all fields to FormData
         Object.entries(formFields).forEach(([key, value]) => {
-          console.log(`Appending ${key} to FormData:`, value); // Debug log
           formData.append(key, value);
         });
 
-        // Append file separately to ensure it's a File object
         if (eventImage && eventImage instanceof File) {
-          console.log("Appending file to FormData:", eventImage.name, eventImage.type, eventImage.size);
           formData.append("event_image", eventImage);
-        } else if (eventImage) {
-          console.warn("eventImage is not a File object:", typeof eventImage, eventImage);
         }
 
-        console.log("FormData contents:", Object.fromEntries(formData)); // Debug log
 
-        const response = await API.createEvent(formData);
-        console.log("Event created successfully:", response);
+        const response = editSlug
+          ? await API.updateEvent(editSlug, formData)
+          : await API.createEvent(formData);
 
         if (response) {
-          setEventSlug(response.slug || response.id);
-
-          setEventCreated(true);
-          toast.success("Event created successfully!");
-          // Reset form after successful creation
-          resetForm();
+          toast.success(editSlug ? "Event updated successfully!" : "Event created successfully!");
+          if (editSlug) {
+            router.push(`/dashboard/${editSlug}`);
+          } else {
+            setEventSlug(response.slug || response.id);
+            setEventCreated(true);
+            resetForm();
+          }
         } else {
           throw new Error("Invalid response format from server");
         }
       } catch (error) {
-        console.error("Error creating event:", error);
-        toast.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to create event"
-        );
+        console.error("Error saving event:", error);
+        toast.error(error.message || "Failed to save event");
       } finally {
         setIsSubmitting(false);
       }
-    },
-    [
-      eventName,
-      date,
-      timeFrom,
-      timeTo,
-      physicalLocation,
-      virtualLink,
-      description,
-      ticketsTransferable,
-      ticketPrice,
-      capacity,
-      eventImage,
-      category,
-      validateForm,
-      token,
-    ]
-  );
+  };
 
   // Memoize link generation functions
   const getEventViewLink = useMemo(() => {
@@ -816,20 +812,27 @@ export default function EventCreationForm() {
             </div>
           </div>
           <div className="md:w-1/4 flex items-end justify-center">
-            {" "}
-            <div className="flex gap-4 ">
+            <div className="flex gap-3">
+              {editSlug && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/dashboard/${editSlug}`)}
+                  className="border border-gray-300 text-gray-600 font-medium py-3 px-6 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
                 className={`bg-gradient-to-r from-[#63D0A5] to-[#16B979] text-white font-medium py-3 px-8 rounded-full transition-colors ${
-                  isSubmitting
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-green-500"
+                  isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
                 }`}
-                aria-label={isSubmitting ? "Creating event" : "Create event"}
               >
-                {isSubmitting ? "Creating..." : "Create Event"}
+                {isSubmitting
+                  ? editSlug ? "Saving..." : "Creating..."
+                  : editSlug ? "Save Changes" : "Create Event"}
               </button>
             </div>
           </div>
