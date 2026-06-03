@@ -1,12 +1,13 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { searchIcon, eventIcon } from "../app/assets/index";
 import Image from "next/image";
 import Link from "next/link";
-import { useWeb3AuthConnect, useIdentityToken } from "@web3auth/modal/react";
+import { useWeb3AuthConnect, useWeb3AuthDisconnect, useIdentityToken } from "@web3auth/modal/react";
 import { FaRegUserCircle } from "react-icons/fa";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 import API from "@/services/api";
 import SignupButton from "./SignupButton";
 import { signOut, authSuccess } from "@/redux/auth/authSlice";
@@ -17,27 +18,26 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const { connect, disconnect, loading: connectLoading } = useWeb3AuthConnect();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const { connect, isConnected, loading: connectLoading } = useWeb3AuthConnect();
+  const { disconnect } = useWeb3AuthDisconnect();
   const { getIdentityToken } = useIdentityToken();
   const pathname = usePathname();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
   const dispatch = useDispatch();
+  const router = useRouter();
   const { user, token } = useSelector((state) => state.auth);
-  const {authenticated} = useWeb3AuthConnect()
+  // Only consider the user logged in when we actually have a Django JWT.
+  // Web3Auth's isConnected alone is not enough — the backend exchange may have failed.
+  const isLoggedIn = !!token;
 
-  // After Web3Auth connects, exchange idToken for Django JWT
-  const handleSignIn = async () => {
+  // Exchange a Web3Auth identity token for a Django JWT.
+  // Returns true on success, false on failure.
+  const exchangeWithBackend = useCallback(async () => {
     try {
-      const provider = await connect();
-      if (!provider) return;
-
       const idToken = await getIdentityToken();
-      if (!idToken) {
-        console.error("[Auth] no idToken after connect");
-        return;
-      }
-
+      if (!idToken) return false;
       const res = await fetch(`${API_URL}/api/auth/social/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -47,13 +47,46 @@ const Navbar = () => {
       if (data.success) {
         API.setAuthToken(data.tokens.access);
         dispatch(authSuccess({ user: data.user, token: data.tokens.access }));
+        return true;
+      }
+      console.error("[Auth] backend rejected:", data.error);
+      await disconnect();
+      return false;
+    } catch (err) {
+      console.error("[Auth] exchange failed:", err);
+      await disconnect();
+      return false;
+    }
+  }, [getIdentityToken, disconnect, dispatch]);
+
+  // After Web3Auth connects, exchange idToken for Django JWT
+  const handleSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      const provider = await connect();
+      if (!provider) return;
+
+      const success = await exchangeWithBackend();
+      if (success) {
+        router.push("/events");
       } else {
-        console.error("[Auth] backend rejected:", data.error);
+        toast.error("Sign in failed. Please try again.");
       }
     } catch (err) {
       console.error("[Auth] sign in failed:", err);
+      toast.error("Sign in failed. Please try again.");
+    } finally {
+      setIsSigningIn(false);
     }
   };
+
+  // If Web3Auth session is alive but Django JWT is missing (e.g. storage cleared),
+  // automatically re-exchange so the user doesn't see a broken state.
+  useEffect(() => {
+    if (isConnected && !token) {
+      exchangeWithBackend();
+    }
+  }, [isConnected, token, exchangeWithBackend]);
 
   useEffect(() => {
     if (token) {
@@ -125,7 +158,7 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md top-0 left-0 w-full z-50 border border-b">
       <div className="container mx-auto px-4">
-        {!authenticated && (
+        {!isLoggedIn && (
           <>
             {/* Desktop View */}
             <div className="hidden lg:flex items-center justify-between py-4">
@@ -136,6 +169,7 @@ const Navbar = () => {
                     alt="byro logo"
                     width={100}
                     height={40}
+                    style={{ height: "auto" }}
                   />
                 </Link>
               </div>
@@ -184,10 +218,10 @@ const Navbar = () => {
 
               <button
                 onClick={handleSignIn}
-                disabled={connectLoading}
+                disabled={connectLoading || isSigningIn}
                 className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {connectLoading ? "Connecting..." : "Sign In"}
+                {connectLoading || isSigningIn ? "Signing in..." : "Sign In"}
               </button>
             </div>
 
@@ -201,19 +235,20 @@ const Navbar = () => {
                       alt="byro logo"
                       width={80}
                       height={32}
+                      style={{ height: "auto" }}
                     />
                   </Link>
                 </div>
 
                 <div className="flex items-center space-x-3">
 
-            
+
                   <button
                     onClick={handleSignIn}
-                    disabled={connectLoading}
+                    disabled={connectLoading || isSigningIn}
                     className="bg-white border border-[#EDEDED] hover:bg-blue-700 hover:text-white text-black font-medium text-xs py-2 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {connectLoading ? "Connecting..." : "Sign In"}
+                    {connectLoading || isSigningIn ? "Signing in..." : "Sign In"}
                   </button>
 
                   <button
@@ -300,7 +335,7 @@ const Navbar = () => {
           </>
         )}
 
-        {authenticated && (
+        {isLoggedIn && (
           <>
             {/* Desktop View */}
             <div className="hidden lg:flex items-center justify-between py-4 bg-[#FFFFFF]">
@@ -311,6 +346,7 @@ const Navbar = () => {
                     alt="byro logo"
                     width={100}
                     height={40}
+                    style={{ height: "auto" }}
                   />
                 </Link>
               </div>
@@ -437,6 +473,7 @@ const Navbar = () => {
                       alt="byro logo"
                       width={80}
                       height={32}
+                      style={{ height: "auto" }}
                     />
                   </Link>
                 </div>

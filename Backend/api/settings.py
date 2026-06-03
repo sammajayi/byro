@@ -201,17 +201,18 @@ STATICFILES_DIRS = [
 ] if os.path.exists(os.path.join(BASE_DIR, 'static')) else []
 
 
+_db_engine = os.getenv('DB_ENGINE', 'django.db.backends.postgresql')
+_is_sqlite = _db_engine == 'django.db.backends.sqlite3'
+
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),  
-        'NAME': os.getenv('DB_NAME'),                                     
-        'USER': os.getenv('DB_USER'),                                     
-        'PASSWORD': os.getenv('DB_PASSWORD'),                             
-        'HOST': os.getenv('DB_HOST'),                                    
-        'PORT': os.getenv('DB_PORT'),                                    
-        'OPTIONS': {
-            'sslmode': 'require', 
-        }
+        'ENGINE': _db_engine,
+        'NAME': BASE_DIR / 'db.sqlite3' if _is_sqlite else os.getenv('DB_NAME'),
+        'USER': '' if _is_sqlite else os.getenv('DB_USER'),
+        'PASSWORD': '' if _is_sqlite else os.getenv('DB_PASSWORD'),
+        'HOST': '' if _is_sqlite else os.getenv('DB_HOST'),
+        'PORT': '' if _is_sqlite else os.getenv('DB_PORT'),
+        **({} if _is_sqlite else {'OPTIONS': {'sslmode': 'require'}}),
     }
 }
 

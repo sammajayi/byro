@@ -1,9 +1,12 @@
 import axios from "axios";
 
+// Normalize the base URL: strip trailing slashes then append /api/
+// NEXT_PUBLIC_API_URL should be the server root (e.g. https://byro.onrender.com)
+const _rawBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
+const API_BASE_URL = _rawBase.endsWith("/api") ? _rawBase + "/" : _rawBase + "/api/";
+
 const axiosInstance = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_URL,
-  // baseURL: "https://byro.onrender.com/api/",
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/",
+  baseURL: API_BASE_URL,
 
   headers: {
     "Content-Type": "application/json",
@@ -14,7 +17,7 @@ const axiosInstance = axios.create({
 
 // Custom method defined *outside* the config object
 axiosInstance.createEvent = (eventData) =>
-  axiosInstance.post("/events/", eventData, {
+  axiosInstance.post("events/", eventData, {
     headers: {
       "Content-Type": "multipart/form-data", // Required for file uploads
     },

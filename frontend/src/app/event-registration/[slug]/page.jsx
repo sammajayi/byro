@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import EventMiniCard from "@/components/EventMiniCard";
 import Footer from "@/components/Footer";
@@ -16,6 +16,7 @@ export default function EventRegistration() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -25,65 +26,97 @@ export default function EventRegistration() {
     phone: "",
     source: "",
   });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("paystack");
 
-  console.log(`regEventSlug: `, slug);
-
-  // Fetch event data when component mounts
   useEffect(() => {
     const fetchEventData = async () => {
       if (!slug) return;
-
       try {
         setLoading(true);
         setError(null);
-
-        const token = localStorage.getItem("authToken");
-        if (token) {
-          API.setAuthToken(token);
-        }
-
-        // Use API.getEvent instead of getEvent
         const response = await API.getEvent(slug);
-        console.log("Fetched event data:", response);
         setEvent(response);
       } catch (err) {
         console.error("Error fetching event:", err);
         setError(err.message || "Failed to load event");
-        toast.error(
-          err.response?.data?.message || "Failed to load event details"
-        );
-
-        // Optionally redirect back to events page after a delay
-        // setTimeout(() => {
-        //   router.push("/events");
-        // }, 3000);
+        toast.error(err.response?.data?.message || "Failed to load event details");
       } finally {
         setLoading(false);
       }
     };
-
     fetchEventData();
   }, [slug]);
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleContinue = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      // Go back to event details page
       router.push(`/${slug}`);
+    }
+  };
+
+  const handleCompletePayment = async () => {
+    const customerName = `${formData.firstName} ${formData.lastName}`.trim();
+    const isFree = parseFloat(event.ticket_price) === 0;
+
+    setIsProcessing(true);
+    try {
+      if (isFree) {
+        const result = await API.initializePayment({
+          event_slug: slug,
+          customer_email: formData.email,
+          customer_name: customerName,
+        });
+
+        const ticket = result.tickets?.[0];
+        localStorage.setItem(
+          "ticketData",
+          JSON.stringify({
+            attendeeName: customerName,
+            attendeeEmail: formData.email,
+            eventName: event.name,
+            eventDate: event.day,
+            timeFrom: event.time_from,
+            ticketId: ticket?.id,
+          })
+        );
+        router.push("/ticket-confirmation");
+        return;
+      }
+
+      if (selectedPaymentMethod === "paystack") {
+        const result = await API.initializePayment({
+          event_slug: slug,
+          customer_email: formData.email,
+          customer_name: customerName,
+        });
+
+        if (result?.data?.authorization_url) {
+          window.location.href = result.data.authorization_url;
+        } else {
+          toast.error("Could not get payment link. Please try again.");
+        }
+        return;
+      }
+
+      toast.error("Wallet payment coming soon. Please use Paystack.");
+    } catch (err) {
+      console.error("Payment error:", err);
+      toast.error(err.message || "Payment failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleContinue = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleCompletePayment();
     }
   };
 
@@ -103,14 +136,11 @@ export default function EventRegistration() {
     );
   }
 
-  // Error state
   if (error || !event) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Event Not Found
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h2>
           <p className="text-gray-600 mb-4">
             {error || "The event you're looking for doesn't exist."}
           </p>
@@ -125,6 +155,9 @@ export default function EventRegistration() {
     );
   }
 
+  const isFree = parseFloat(event.ticket_price) === 0;
+  const step3ButtonLabel = isFree ? "Complete Registration" : "Complete Payment";
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto mb-20">
@@ -134,13 +167,11 @@ export default function EventRegistration() {
               <div className="flex items-center gap-3 mb-2">
                 <Image src={Tix} alt="ticket-icon" />
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {parseFloat(event.ticket_price) === 0
-                    ? "Complete Registration"
-                    : "Choose Payment Method"}
+                  {isFree ? "Complete Registration" : "Choose Payment Method"}
                 </h1>
               </div>
               <p className="text-gray-600">
-                {parseFloat(event.ticket_price) === 0
+                {isFree
                   ? "Review and confirm your free event registration"
                   : "Select your preferred payment method to complete your ticket purchase"}
               </p>
@@ -149,9 +180,7 @@ export default function EventRegistration() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Image src={Tix} alt="ticket-icon" />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Event Registration
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900">Event Registration</h1>
               </div>
               <p className="text-gray-600">
                 Complete your registration for <strong>{event.name}</strong>
@@ -160,7 +189,7 @@ export default function EventRegistration() {
           )}
 
           <div className="flex items-center justify-end gap-4 mb-8">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <div key={step.number} className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div
@@ -177,9 +206,7 @@ export default function EventRegistration() {
                   <div>
                     <div
                       className={`font-semibold ${
-                        currentStep === step.number
-                          ? "text-gray-900"
-                          : "text-gray-500"
+                        currentStep === step.number ? "text-gray-900" : "text-gray-500"
                       }`}
                     >
                       {step.title}
@@ -187,9 +214,7 @@ export default function EventRegistration() {
                     {step.subtitle && (
                       <div
                         className={`text-sm ${
-                          currentStep === step.number
-                            ? "text-gray-600"
-                            : "text-gray-400"
+                          currentStep === step.number ? "text-gray-600" : "text-gray-400"
                         }`}
                       >
                         {step.subtitle}
@@ -202,17 +227,13 @@ export default function EventRegistration() {
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Form */}
           <div className="bg-white rounded-xl shadow-xl p-8">
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-normal text-[#090909] mb-2">
-                      First Name
-                    </label>
+                    <label className="block font-normal text-[#090909] mb-2">First Name</label>
                     <input
                       type="text"
                       name="firstName"
@@ -223,9 +244,7 @@ export default function EventRegistration() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      Last Name
-                    </label>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">Last Name</label>
                     <input
                       type="text"
                       name="lastName"
@@ -238,9 +257,7 @@ export default function EventRegistration() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-[#090909] mb-2">Email</label>
                   <input
                     type="email"
                     name="email"
@@ -252,9 +269,7 @@ export default function EventRegistration() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Phone Number
-                  </label>
+                  <label className="block text-sm font-medium text-[#090909] mb-2">Phone Number</label>
                   <input
                     type="tel"
                     name="phone"
@@ -284,75 +299,53 @@ export default function EventRegistration() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      First Name
-                    </label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                      {formData.firstName}
-                    </div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">First Name</label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{formData.firstName}</div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#090909] mb-2">
-                      Last Name
-                    </label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                      {formData.lastName}
-                    </div>
+                    <label className="block text-sm font-medium text-[#090909] mb-2">Last Name</label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{formData.lastName}</div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Email
-                  </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.email}
-                  </div>
+                  <label className="block text-sm font-medium text-[#090909] mb-2">Email</label>
+                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{formData.email}</div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#090909] mb-2">
-                    Phone Number
-                  </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.phone}
-                  </div>
+                  <label className="block text-sm font-medium text-[#090909] mb-2">Phone Number</label>
+                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{formData.phone}</div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[#090909] mb-2">
                     How did you hear about this event
                   </label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">
-                    {formData.source}
-                  </div>
+                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{formData.source}</div>
                 </div>
               </div>
             )}
 
             {currentStep === 3 && (
               <div className="space-y-6 bg-none">
-                {parseFloat(event.ticket_price) === 0 ? (
-                  // Free event confirmation
+                {isFree ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <BadgeCheck className="w-8 h-8 text-green-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Free Event Registration
-                    </h3>
-                    <p className="text-gray-600">
-                      No payment required. Click Complete Registration to
-                      finish.
-                    </p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Free Event Registration</h3>
+                    <p className="text-gray-600">No payment required. Click Complete Registration to finish.</p>
                   </div>
                 ) : (
-                  <PaymentMethod />
+                  <PaymentMethod
+                    selectedMethod={selectedPaymentMethod}
+                    onSelect={setSelectedPaymentMethod}
+                  />
                 )}
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-4 mt-8">
               <button
                 onClick={handleBack}
@@ -363,19 +356,17 @@ export default function EventRegistration() {
               </button>
               <button
                 onClick={handleContinue}
-                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
                 disabled={
-                  currentStep === 1 &&
-                  (!formData.firstName ||
-                    !formData.lastName ||
-                    !formData.email ||
-                    !formData.phone)
+                  isProcessing ||
+                  (currentStep === 1 &&
+                    (!formData.firstName || !formData.lastName || !formData.email || !formData.phone))
                 }
+                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentStep === 3
-                  ? parseFloat(event.ticket_price) === 0
-                    ? "Complete Registration"
-                    : "Complete Payment"
+                {isProcessing
+                  ? "Processing..."
+                  : currentStep === 3
+                  ? step3ButtonLabel
                   : "Continue"}
               </button>
             </div>
