@@ -92,7 +92,10 @@ export default function EventDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-3 w-full sm:w-auto justify-center sm:justify-end">
-                      <button className="bg-blue-50 text-[#007AFF] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-none hover:bg-blue-100 transition-colors flex items-center space-x-3 text-sm sm:text-base lg:text-lg">
+                      <button
+                        onClick={() => router.push(`/${slug}/edit`)}
+                        className="bg-blue-50 text-[#007AFF] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-none hover:bg-blue-100 transition-colors flex items-center space-x-3 text-sm sm:text-base lg:text-lg"
+                      >
                         <span>Edit Event</span>
                       </button>
                       <button
