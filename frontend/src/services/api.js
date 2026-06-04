@@ -127,6 +127,28 @@ const API = {
     }
   },
 
+  getEventAttendees: async (slug, params = {}) => {
+    try {
+      const response = await axiosInstance.get(`events/${slug}/attendees/`, { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getMyTicket: async (slug) => {
+    try {
+      const response = await axiosInstance.get(`events/${slug}/my_ticket/`);
+      return response.data;
+    } catch (error) {
+      // 401 = not logged in, treat as not registered
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        return { registered: false };
+      }
+      throw handleApiError(error);
+    }
+  },
+
   getEventBySlug: async (slug) => {
     try {
       const response = await axiosInstance.get(`events/${slug}/`);
@@ -140,6 +162,15 @@ const API = {
   getEvents: async () => {
     try {
       const response = await axiosInstance.get("events/");
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getDashboard: async () => {
+    try {
+      const response = await axiosInstance.get("dashboard/");
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -185,18 +216,45 @@ const API = {
   },
 
 
-  // Update an event
+  // Update an event (PATCH = partial update, no need to send all fields)
   updateEvent: async (slug, formData) => {
     try {
-      const response = await axiosInstance.put(`events/${slug}/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await axiosInstance.patch(`events/${slug}/`, formData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  checkInAttendee: async (slug, emailOrToken) => {
+    try {
+      const body = emailOrToken.includes("@")
+        ? { email: emailOrToken }
+        : { qr_token: emailOrToken };
+      const response = await axiosInstance.post(`events/${slug}/checkin/`, body);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  addCohost: async (slug, email) => {
+    try {
+      const response = await axiosInstance.post(`events/${slug}/add_cohost/`, { email });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  removeCohost: async (slug, cohostId) => {
+    try {
+      const response = await axiosInstance.delete(`events/${slug}/remove_cohost/`, {
+        data: { cohost_id: cohostId },
       });
       return response.data;
     } catch (error) {
-      handleApiError(error);
-      throw error;
+      throw handleApiError(error);
     }
   },
 

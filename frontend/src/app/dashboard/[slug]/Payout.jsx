@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const Payout = () => {
@@ -81,44 +81,48 @@ const Payout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
-    if (validateForm()) {
-      // Handle form submission
-  
-
-      const emailResponse = await fetch("/api/send-email", {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           emails: [
             {
-              type:"payout",
+              type: "payout",
               to: formData.email,
               data: {
-             name: formData.accountName || "User", // Use account name or fallback
-                  amount: formData.amount,
-                  method: payoutMethod,
-                   // Add more payout details as needed
-                  ...(payoutMethod === "bank" && {
-                    accountNumber: formData.accountNumber,
-                    bankName: formData.bankName,
-                  }),
-                  ...(payoutMethod === "wallet" && {
-                    walletAddress: formData.walletAddress,
-                    walletType: formData.walletType,
-                  }),
-              }
-            }
-          ]
-        })
-      })
-      if (emailResponse.ok) {
-     toast.success("Payout request submitted successfully! You'll receive a confirmation email.");
-    } else {
-      toast.error("Failed to submit payout request.");
+                name: formData.accountName || "User",
+                amount: formData.amount,
+                method: payoutMethod,
+                ...(payoutMethod === "bank" && {
+                  accountNumber: formData.accountNumber,
+                  bankName: formData.bankName,
+                }),
+                ...(payoutMethod === "wallet" && {
+                  walletAddress: formData.walletAddress,
+                  walletType: formData.walletType,
+                }),
+              },
+            },
+          ],
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Payout request submitted! You'll receive a confirmation email within 24 hours.");
+        setFormData({ accountName: "", accountNumber: "", bankName: "", walletAddress: "", walletType: "ethereum", email: "", amount: "" });
+      } else {
+        toast.error("Failed to submit payout request. Please try again.");
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to submit payout request.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
-}
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-lg  p-6">

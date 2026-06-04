@@ -125,7 +125,7 @@ class EventCoHostSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     owner_email = serializers.EmailField(source='owner.email', read_only=True)
-    cohosts = EventCoHostSerializer(many=True, read_only=True, source='eventcohost_set')
+    cohosts = EventCoHostSerializer(many=True, read_only=True)
 
     # Role information for the current user
     role = serializers.SerializerMethodField()
