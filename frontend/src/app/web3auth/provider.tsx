@@ -7,14 +7,17 @@ import { WagmiProvider } from "@web3auth/modal/react/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID || "";
+const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_PROD_CLIENT_ID || "";
+const isProduction = process.env.NODE_ENV === "production";
 
 const queryClient = new QueryClient();
- 
+
 const web3AuthContextConfig: Web3AuthContextConfig = {
     web3AuthOptions: {
       clientId,
-      web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+      web3AuthNetwork: isProduction
+        ? WEB3AUTH_NETWORK.SAPPHIRE_MAINNET
+        : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
       ssr: true,
     }
   };
