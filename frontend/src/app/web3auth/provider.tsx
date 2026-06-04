@@ -10,7 +10,7 @@ import React from "react";
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_PROD_CLIENT_ID || "";
 
 const queryClient = new QueryClient();
- 
+
 const web3AuthContextConfig: Web3AuthContextConfig = {
     web3AuthOptions: {
       clientId,
