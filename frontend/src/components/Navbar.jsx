@@ -38,7 +38,7 @@ const Navbar = () => {
     try {
       const idToken = await getIdentityToken();
       if (!idToken) return false;
-      const res = await fetch(`${API_URL}/api/auth/social/`, {
+      const res = await fetch(`${API_URL}auth/social/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider: "web3auth", token: idToken }),
