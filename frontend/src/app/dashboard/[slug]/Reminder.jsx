@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlaneIcon } from "@hugeicons/core-free-icons";
 import API from "../../../services/api";
 import { toast } from "sonner";
 
@@ -39,6 +41,9 @@ export default function Reminder() {
       }
       if (selectedRecipients === "waitlist") {
         return t.payment_status === "pending";
+      }
+      if (selectedRecipients === "not_going") {
+        return t.payment_status === "failed";
       }
       return false;
     });
@@ -82,6 +87,7 @@ export default function Reminder() {
   const recipientOptions = [
     { value: "going", label: "Going" },
     { value: "waitlist", label: "Waitlist" },
+    { value: "not_going", label: "Not Going" },
   ];
 
   return (
@@ -146,9 +152,10 @@ export default function Reminder() {
       <button
         onClick={handleSend}
         disabled={isSending}
-        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium px-6 py-2 rounded-lg transition-colors"
+        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
       >
-        {isSending ? "Sending..." : "Send"}
+        <HugeiconsIcon icon={PlaneIcon} size={16} />
+        <span>{isSending ? "Sending..." : "Send"}</span>
       </button>
     </div>
   );

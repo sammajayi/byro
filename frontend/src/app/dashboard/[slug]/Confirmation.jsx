@@ -1,7 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { UserPlus, Check, X, Search } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  UserAdd01Icon,
+  CheckIcon,
+  CircleXIcon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import API from "../../../services/api";
 import { toast } from "sonner";
 
@@ -71,7 +77,7 @@ export default function Confirmation() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-                  <UserPlus className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={UserAdd01Icon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Waitlist</p>
               </div>
@@ -81,7 +87,7 @@ export default function Confirmation() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={CheckIcon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Going</p>
               </div>
@@ -91,7 +97,7 @@ export default function Confirmation() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
-                  <X className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={CircleXIcon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Not Going</p>
               </div>
@@ -105,7 +111,7 @@ export default function Confirmation() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-gray-900 font-bold text-xl">Registrations</h1>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="search"
             value={searchTerm}
@@ -169,14 +175,14 @@ export default function Confirmation() {
                         className="w-7 h-7 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white"
                         title="Approve"
                       >
-                        <Check className="w-3 h-3" />
+                        <HugeiconsIcon icon={CheckIcon} size={12} />
                       </button>
                       <button
                         onClick={() => updateStatus(attendee.id, "not_going")}
                         className="w-7 h-7 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white"
                         title="Decline"
                       >
-                        <X className="w-3 h-3" />
+                        <HugeiconsIcon icon={CircleXIcon} size={12} />
                       </button>
                     </div>
                   )}

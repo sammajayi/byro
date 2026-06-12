@@ -53,7 +53,11 @@ export default function EventCreationForm({ editSlug = null, initialData = null 
     setEventVisibility(d.visibility === "public");
     setCategory(d.category || "other");
     if (d.event_image_url || d.event_image) {
-      setImagePreview(d.event_image_url || d.event_image);
+      const imgUrl = d.event_image_url ||
+        (d.event_image?.startsWith("http")
+          ? d.event_image
+          : `${(process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com").replace(/\/api\/?$/, "")}${d.event_image}`);
+      setImagePreview(imgUrl);
     }
   }, [initialData]);
 

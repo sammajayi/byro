@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { schedule, Location } from "../../assets";
 import Image from "next/image";
-import { Link, Plus, Trash2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Link01Icon, PlusSignIcon, Delete04Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 
 export default function EventDetails() {
@@ -129,7 +130,7 @@ export default function EventDetails() {
               onClick={handleCopyLink}
               className="flex items-center space-x-2 text-[#4F8BFF] hover:text-blue-700 transition-colors"
             >
-              <Link className="w-5 h-5" />
+              <HugeiconsIcon icon={Link01Icon} size={20} />
               <span className="font-medium">{copySuccess ? "Link Copied!" : "Copy Event Link"}</span>
             </button>
           </div>
@@ -139,7 +140,12 @@ export default function EventDetails() {
         <div className="lg:w-1/2">
           {event?.event_image_url || event?.event_image ? (
             <img
-              src={event.event_image_url || event.event_image}
+              src={
+                event.event_image_url ||
+                (event.event_image?.startsWith("http")
+                  ? event.event_image
+                  : `${(process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com").replace(/\/api\/?$/, "")}${event.event_image}`)
+              }
               alt={event?.name}
               className="w-full h-[244px] object-cover rounded-2xl"
             />
@@ -162,12 +168,12 @@ export default function EventDetails() {
             onClick={() => setShowAddHost(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
-            <Plus className="w-4 h-4" />
+            <HugeiconsIcon icon={PlusSignIcon} size={16} />
             <span>Add Host</span>
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div>
           {hostsLoading ? (
             <div className="flex items-center gap-2 py-4">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
@@ -179,20 +185,20 @@ export default function EventDetails() {
             <p className="text-gray-400 text-sm py-4">No hosts found.</p>
           ) : (
             hosts.map((host) => (
-              <div key={host.id} className="flex items-center justify-between p-4 gap-x-3 rounded-lg border border-gray-100">
-                <div className="font-semibold text-[#3D4852] w-1/4">{host.name}</div>
-                <div className="text-sm text-[#3D4852] w-1/4">{host.email}</div>
-                <div className="w-1/4 flex justify-start items-center">
-                  <div className="text-sm text-blue-600 font-medium px-3">{host.role}</div>
+              <div key={host.id} className="flex items-center px-4 py-4 border-b border-gray-100 last:border-b-0">
+                <div className="w-[25%] font-semibold text-[#3D4852] text-sm">{host.name}</div>
+                <div className="w-[30%] text-sm text-[#3D4852]">{host.email}</div>
+                <div className="w-[25%]">
+                  <span className="text-sm text-blue-600 font-medium">{host.role}</span>
                 </div>
-                <div className="flex items-center space-x-4 w-1/4 justify-center">
+                <div className="flex-1 flex justify-end">
                   {host.id !== "owner" && (
                     <button
                       onClick={() => handleRemoveHost(host.id)}
                       className="text-gray-400 hover:text-red-500 transition-colors p-1"
                       title="Remove co-host"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <HugeiconsIcon icon={Delete04Icon} size={18} />
                     </button>
                   )}
                 </div>

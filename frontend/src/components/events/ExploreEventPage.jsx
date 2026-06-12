@@ -1,7 +1,15 @@
 "use client";
 import React, { useState } from "react";
 
-import { Box, Users, Palette, Dumbbell, Monitor, Settings } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  BoxIcon,
+  UserMultipleIcon,
+  PaintBrush01Icon,
+  Dumbbell01Icon,
+  MonitorDotIcon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
 import EventsContainer from "./EventsContainer";
 
 const CategoryCard = ({
@@ -22,7 +30,7 @@ const CategoryCard = ({
         <p className="text-blue-600 font-medium text-sm">{eventCount} Events</p>
       </div>
       <div className="text-4xl">
-        <Icon className="w-8 h-8 text-blue-600" />
+        <HugeiconsIcon icon={Icon} size={32} color="#2563eb" />
       </div>
     </div>
   );
@@ -42,37 +50,37 @@ export default function Categories() {
       id: 1,
       title: "Web3 & Crypto",
       eventCount: "1k",
-      icon: Box,
+      icon: BoxIcon,
     },
     {
       id: 2,
       title: "Entertainment",
       eventCount: "1k",
-      icon: Users,
+      icon: UserMultipleIcon,
     },
     {
       id: 3,
       title: "Art & Culure",
       eventCount: "1k",
-      icon: Palette,
+      icon: PaintBrush01Icon,
     },
     {
       id: 4,
       title: "Fitness",
       eventCount: "1k",
-      icon: Dumbbell,
+      icon: Dumbbell01Icon,
     },
     {
       id: 5,
       title: "Conference",
       eventCount: "1k",
-      icon: Monitor,
+      icon: MonitorDotIcon,
     },
     {
       id: 6,
       title: "Technology",
       eventCount: "1k",
-      icon: Settings,
+      icon: Settings01Icon,
     },
   ];
 

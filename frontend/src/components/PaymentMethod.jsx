@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { BadgeCheck } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { BadgeCheckIcon } from "@hugeicons/core-free-icons";
 import CryptoPayment from "../../public/images/crypto-wallet.svg";
 import CardPayment from "../../public/images/card-payment.svg";
 
@@ -51,17 +52,17 @@ export default function PaymentMethod({ selectedMethod, onSelect }) {
 
             <div className="flex gap-2 mt-2 text-xs text-gray-600 justify-between">
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1  rounded-lg">Decentralized</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1 ">Low fees</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1 ">Privacy focused</span>
               </div>
             </div>
@@ -111,17 +112,17 @@ export default function PaymentMethod({ selectedMethod, onSelect }) {
 
             <div className="flex gap-2 mt-2 text-xs text-gray-600 justify-between">
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1  rounded-lg">Bank Transfer</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1 ">Mobile Money</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+                <HugeiconsIcon icon={BadgeCheckIcon} size={20} color="#22c55e" />
                 <span className="px-2 py-1 ">Card Payment</span>
               </div>
             </div>

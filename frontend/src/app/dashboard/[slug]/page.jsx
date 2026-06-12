@@ -2,19 +2,12 @@
 import API from "../../../services/api";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { eventIcon } from "../../assets";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
-  Link,
-  Edit3,
-  Trash2,
-  Plus,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
+  Calendar01Icon,
+  Edit03Icon,
+  ArrowLeft01Icon,
+} from "@hugeicons/core-free-icons";
 import Navbar from "../../../components/Navbar";
 import DashboardTab from "@/components/DashboardTab";
 import EventDetails from "./EventDetails";
@@ -22,15 +15,11 @@ import Payout from "./Payout";
 import Attendees from "./Attendees";
 import Confirmation from "./Confirmation";
 import Reminder from "./Reminder";
-import Image from "next/image";
 import { Providers } from "@/redux/Providers";
 
 export default function EventDashboard() {
   const params = useParams();
   const { slug } = params;
-  const [activeTab, setActiveTab] = useState("overview");
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [ticketData, setTicketData] = useState(null);
   const [event, setEvent] = useState(null);
   const [activePage, setActivePage] = useState("overview");
 
@@ -83,10 +72,19 @@ export default function EventDashboard() {
               {/* Header Section */}
               <div className="w-full mb-4">
                 <div className="max-w-full mx-auto">
+                  {/* Back Link */}
+                  <button
+                    onClick={() => router.back()}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4 text-sm"
+                  >
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+                    Back
+                  </button>
+
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-4 sm:gap-0">
                     <div className="flex items-center space-x-4 w-full sm:w-auto">
                       <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-5 w-full sm:w-auto">
-                        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#007AFF] text-center sm:text-left">
+                        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#007AFF] text-center sm:text-left uppercase">
                           {event ? event.name : "BYRO LAUNCH"}
                         </h1>
                       </div>
@@ -96,12 +94,14 @@ export default function EventDashboard() {
                         onClick={() => router.push(`/${slug}/edit`)}
                         className="bg-blue-50 text-[#007AFF] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-none hover:bg-blue-100 transition-colors flex items-center space-x-3 text-sm sm:text-base lg:text-lg"
                       >
+                        <HugeiconsIcon icon={Edit03Icon} size={18} />
                         <span>Edit Event</span>
                       </button>
                       <button
                         onClick={handleViewEvent}
                         className="bg-blue-50 text-[#007AFF] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-none hover:bg-blue-100 transition-colors flex items-center space-x-3 text-sm sm:text-base lg:text-lg"
                       >
+                        <HugeiconsIcon icon={Calendar01Icon} size={18} />
                         <span>Event Page</span>
                       </button>
                     </div>

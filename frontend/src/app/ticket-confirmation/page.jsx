@@ -27,12 +27,19 @@ function TicketConfirmationContent() {
   const handleAddToCalendar = useCallback(() => {
     if (!ticketData) return;
 
-    const startDateTime = ticketData.eventDate
+    const startStr = ticketData.eventDate
       ? `${ticketData.eventDate}T${ticketData.timeFrom || '00:00'}:00`
+      : null;
+    const startDateTime = startStr && !isNaN(new Date(startStr).getTime())
+      ? startStr
       : new Date().toISOString();
 
     const endDate = new Date(startDateTime);
-    endDate.setHours(endDate.getHours() + 2);
+    if (isNaN(endDate.getTime())) {
+      endDate.setTime(Date.now() + 2 * 60 * 60 * 1000);
+    } else {
+      endDate.setHours(endDate.getHours() + 2);
+    }
     const endDateTime = endDate.toISOString();
 
     const ics = generateICS({

@@ -12,8 +12,17 @@ const EventCard = ({ event }) => {
 
   // Get image URL with fallback
   const getImageUrl = () => {
-    if (!event.event_image || imageError) {
-      return "/assets/images/default-event.jpg"; 
+    if (imageError) {
+      return "/assets/images/default-event.jpg";
+    }
+
+    // Prefer the full URL from the serializer
+    if (event.event_image_url) {
+      return event.event_image_url;
+    }
+
+    if (!event.event_image) {
+      return "/assets/images/default-event.jpg";
     }
 
     // If it's already a full URL
@@ -21,10 +30,10 @@ const EventCard = ({ event }) => {
       return event.event_image;
     }
 
-    // If it's a relative path from your API
-    const baseURL =
-      process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com";
-    return `${baseURL}${event.event_image}`;
+    // Relative path - build from the API base (strip /api/ suffix if present)
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com";
+    const base = apiBase.replace(/\/api\/?$/, "");
+    return `${base}${event.event_image}`;
   };
 
   // Extract event data

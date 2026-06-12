@@ -1,6 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Search, UserPlus, Check, QrCode, X } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Search01Icon,
+  UserAdd01Icon,
+  CheckIcon,
+  QrCodeIcon,
+  CircleXIcon,
+  Delete04Icon,
+} from "@hugeicons/core-free-icons";
 import { useReactToPrint } from "react-to-print";
 import { useParams } from "next/navigation";
 import API from "../../../services/api";
@@ -87,6 +95,17 @@ export default function Attendees() {
 
   useEffect(() => { loadAttendees(); }, [slug]);
 
+  const handleDelete = async (attendee) => {
+    if (!confirm(`Remove ${attendee.name} from this event?`)) return;
+    try {
+      await API.cancelRegistration(attendee.id);
+      toast.success(`${attendee.name} has been removed`);
+      loadAttendees();
+    } catch (err) {
+      toast.error(err.message || "Failed to remove attendee");
+    }
+  };
+
   const handleCheckIn = async () => {
     if (!checkInValue.trim()) return;
     setCheckingIn(true);
@@ -139,7 +158,7 @@ export default function Attendees() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-gray-400 rounded-sm flex items-center justify-center">
-                  <UserPlus className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={UserAdd01Icon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Attendees Cap</p>
               </div>
@@ -149,7 +168,7 @@ export default function Attendees() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={CheckIcon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Checked In</p>
               </div>
@@ -159,7 +178,7 @@ export default function Attendees() {
             <div className="flex flex-col items-center space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-                  <UserPlus className="w-3 h-3 text-white" />
+                  <HugeiconsIcon icon={UserAdd01Icon} size={12} color="white" />
                 </div>
                 <p className="text-gray-600 text-sm font-medium">Registered</p>
               </div>
@@ -174,7 +193,7 @@ export default function Attendees() {
             onClick={() => setShowCheckInModal(true)}
             className="flex items-center gap-2 bg-[#007AFF] hover:bg-[#0056CC] text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
           >
-            <QrCode className="w-4 h-4" />
+            <HugeiconsIcon icon={QrCodeIcon} size={16} />
             Check In
           </button>
           <button
@@ -193,7 +212,7 @@ export default function Attendees() {
           <p className="text-gray-500 text-sm">{attendeesData.length} registered</p>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="search"
             value={searchTerm}
@@ -235,6 +254,13 @@ export default function Attendees() {
                 >
                   {attendee.isGoing ? "Checked In" : "Registered"}
                 </span>
+                <button
+                  onClick={() => handleDelete(attendee)}
+                  className="ml-3 p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remove attendee"
+                >
+                  <HugeiconsIcon icon={Delete04Icon} size={18} />
+                </button>
               </div>
             ))}
           </div>
@@ -248,7 +274,7 @@ export default function Attendees() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Check In Attendee</h3>
               <button onClick={() => setShowCheckInModal(false)}>
-                <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                <HugeiconsIcon icon={CircleXIcon} size={20} className="text-gray-400 hover:text-gray-600" />
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-4">

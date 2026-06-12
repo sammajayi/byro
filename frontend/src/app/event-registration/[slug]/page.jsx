@@ -8,7 +8,8 @@ import PaymentMethod from "@/components/PaymentMethod";
 import { useParams, useRouter } from "next/navigation";
 import API from "../../../services/api";
 import { toast } from "sonner";
-import { Undo2, BadgeCheck } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Undo02Icon, BadgeCheckIcon } from "@hugeicons/core-free-icons";
 
 export default function EventRegistration() {
   const { slug } = useParams();
@@ -360,7 +361,7 @@ export default function EventRegistration() {
                 {isFree ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BadgeCheck className="w-8 h-8 text-green-500" />
+                      <HugeiconsIcon icon={BadgeCheckIcon} size={32} color="#22c55e" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Free Event Registration</h3>
                     <p className="text-gray-600">No payment required. Click Complete Registration to finish.</p>
@@ -379,7 +380,7 @@ export default function EventRegistration() {
                 onClick={handleBack}
                 className="flex-1 px-6 py-3 border-2 border-blue-500 text-blue-500 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
               >
-                <Undo2 size={20} />
+                <HugeiconsIcon icon={Undo02Icon} size={20} />
                 {currentStep === 1 ? "Back to Event" : "Back"}
               </button>
               <button

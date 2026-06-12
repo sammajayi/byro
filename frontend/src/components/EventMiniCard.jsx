@@ -1,5 +1,6 @@
 import React from "react";
-import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Calendar01Icon, MapPinIcon, UserMultipleIcon } from "@hugeicons/core-free-icons";
 
 const EventMiniCard = ({ event }) => {
   return (
@@ -18,7 +19,7 @@ const EventMiniCard = ({ event }) => {
           {event?.name || "Event"}
         </h2>
         <div className="flex items-center gap-2 text-blue-600">
-          <Users size={20} />
+          <HugeiconsIcon icon={UserMultipleIcon} size={20} />
           <span className="font-semibold">
             {event?.attendee_count || "0"}+ Attendees
           </span>
@@ -29,7 +30,7 @@ const EventMiniCard = ({ event }) => {
         <div className="flex justify-between">
           <div className="flex items-start gap-3">
             <div className="bg-red-100 p-2 rounded-lg">
-              <Calendar className="text-red-600" size={20} />
+              <HugeiconsIcon icon={Calendar01Icon} size={20} color="#dc2626" />
             </div>
             <div>
               <div className="font-semibold text-gray-900">
@@ -64,7 +65,7 @@ const EventMiniCard = ({ event }) => {
 
           <div className="flex items-start gap-3">
             <div className="bg-blue-100 p-2 rounded-lg">
-              <MapPin className="text-blue-600" size={20} />
+              <HugeiconsIcon icon={MapPinIcon} size={20} color="#2563eb" />
             </div>
             <div>
               <div className="font-semibold text-gray-900">

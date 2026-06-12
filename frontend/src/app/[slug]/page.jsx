@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Transfer, Location, nft, schedule } from "../assets/index";
 import Image from "next/image";
-import { Ticket } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Ticket01Icon } from "@hugeicons/core-free-icons";
 import RegisterModal from "../../components/auth/RegisterModal";
 import API from "../../services/api";
 import { toast } from "sonner";
@@ -27,7 +28,16 @@ const ViewEvent = () => {
 
   // Get image URL with fallback
   const getImageUrl = () => {
-    if (!event.event_image || imageError) {
+    if (imageError) {
+      return "/assets/images/default-event.jpg";
+    }
+
+    // Prefer the full URL from the serializer
+    if (event.event_image_url) {
+      return event.event_image_url;
+    }
+
+    if (!event.event_image) {
       return "/assets/images/default-event.jpg";
     }
 
@@ -36,9 +46,10 @@ const ViewEvent = () => {
       return event.event_image;
     }
 
-    const baseURL =
-      process.env.NEXT_PUBLIC_API_URL;
-    return `${baseURL}${event.event_image}`;
+    // Relative path - build from the API base (strip /api/ suffix if present)
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com";
+    const base = apiBase.replace(/\/api\/?$/, "");
+    return `${base}${event.event_image}`;
   };
 
   const handleRegister = async () => {
@@ -231,7 +242,7 @@ const ViewEvent = () => {
           <div className="relative w-full h-[240px] rounded-2xl overflow-hidden mb-6">
             {event.event_image || event.event_image_url ? (
               <img
-                src={event.event_image_url || getImageUrl()}
+                src={getImageUrl()}
                 alt={event.name}
                 className="w-full h-full object-cover"
               />
@@ -293,7 +304,7 @@ const ViewEvent = () => {
             {/* Price */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center rotate-12">
-                <Ticket className="w-5 h-5 text-white" />
+                <HugeiconsIcon icon={Ticket01Icon} size={20} color="white" />
               </div>
               <div>
                 <p className="font-bold text-gray-800 text-sm">{priceLabel}</p>
@@ -655,7 +666,7 @@ const ViewEvent = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 transform rotate-12">
-                      <Ticket className="w-4 h-4 text-white" />
+                      <HugeiconsIcon icon={Ticket01Icon} size={16} color="white" />
                     </div>
                     <div>
                       <div className="font-bold text-xl text-gray-800">

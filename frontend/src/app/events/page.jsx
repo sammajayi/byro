@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, MapPin, Settings } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Calendar01Icon, MapPinIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import AppLayout from "@/layout/app";
 import API from "@/services/api";
 
@@ -24,7 +25,7 @@ function EventRow({ event, isOwner }) {
     (event.event_image?.startsWith("http")
       ? event.event_image
       : event.event_image
-      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${event.event_image}`
+      ? `${(process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com").replace(/\/api\/?$/, "")}${event.event_image}`
       : "/assets/images/default-event.jpg");
 
   return (
@@ -43,12 +44,12 @@ function EventRow({ event, isOwner }) {
         <h3 className="font-semibold text-gray-900 truncate">{event.name}</h3>
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
           <span className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
+            <HugeiconsIcon icon={Calendar01Icon} size={12} />
             {formatDate(event.day)}
           </span>
           {event.location && (
             <span className="flex items-center gap-1 truncate">
-              <MapPin className="w-3 h-3" />
+              <HugeiconsIcon icon={MapPinIcon} size={12} />
               {event.location}
             </span>
           )}
@@ -61,7 +62,7 @@ function EventRow({ event, isOwner }) {
             href={`/dashboard/${event.slug}`}
             className="flex items-center gap-1.5 bg-[#1F6BFF] text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Settings className="w-3 h-3" />
+            <HugeiconsIcon icon={Settings01Icon} size={12} />
             Manage
           </Link>
         ) : (

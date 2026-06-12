@@ -2,7 +2,8 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import API from "@/services/api";
-import { BadgeCheck, XCircle } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { BadgeCheckIcon, CircleXIcon } from "@hugeicons/core-free-icons";
 
 function PaymentCallbackContent() {
   const searchParams = useSearchParams();
@@ -95,7 +96,7 @@ function PaymentCallbackContent() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-          <BadgeCheck className="w-10 h-10 text-green-500" />
+          <HugeiconsIcon icon={BadgeCheckIcon} size={40} color="#22c55e" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900">Payment Successful!</h2>
         <p className="text-gray-600">Redirecting to your ticket...</p>
@@ -106,7 +107,7 @@ function PaymentCallbackContent() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
       <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
-        <XCircle className="w-10 h-10 text-red-500" />
+        <HugeiconsIcon icon={CircleXIcon} size={40} color="#ef4444" />
       </div>
       <h2 className="text-2xl font-bold text-gray-900">Payment Failed</h2>
       <p className="text-gray-600">Your payment could not be verified. Please try again.</p>
