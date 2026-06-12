@@ -46,7 +46,7 @@ export default function EventDashboard() {
   } else if (activePage === "reminder") {
     content = <Reminder />;
   } else if (activePage === "payout") {
-    content = <Payout />;
+      content = <Payout event={event} />;
   }
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function EventDashboard() {
   }, [slug]);
 
   const handleViewEvent = async () => {
-    const viewEventLink = `${window.location.origin}/${event?.slug}`;
+    const viewEventLink = `${window.location.origin}/${slug}`;
     try {
       window.open(viewEventLink, "_blank", "noopener,noreferrer");
     } catch (err) {

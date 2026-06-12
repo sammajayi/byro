@@ -34,6 +34,35 @@ export default function CreateEventPage() {
 
         const created = await API.createEvent(eventData);
         console.log("Event created", created);
+
+        const userEmail = created?.owner_email || localStorage.getItem("userEmail");
+        if (userEmail) {
+          try {
+            await fetch("/api/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                emails: [
+                  {
+                    type: "event_created",
+                    to: userEmail,
+                    data: {
+                      name: created?.owner_name || "Organizer",
+                      eventName: created?.name || eventData?.name,
+                      eventDate: created?.day || eventData?.day,
+                      eventTime: created?.time_from || eventData?.time_from,
+                      eventLocation: created?.location,
+                      eventLink: `${window.location.origin}/${created?.slug}`,
+                    },
+                  },
+                ],
+              }),
+            });
+          } catch (e) {
+            console.error("Failed to send event created email:", e);
+          }
+        }
+
         toast.success("Event created successfully!");
         router.push("/events");
       } catch (error) {

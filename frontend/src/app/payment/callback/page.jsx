@@ -7,7 +7,7 @@ import { BadgeCheck, XCircle } from "lucide-react";
 function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState("verifying"); // verifying | success | failed
+  const [status, setStatus] = useState("verifying");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -18,21 +18,56 @@ function PaymentCallbackContent() {
     }
 
     API.verifyPayment(reference)
-      .then((data) => {
+      .then(async (data) => {
         if (data.status === "success") {
           const ticket = data.tickets?.[0];
           const payment = data.payment;
-          localStorage.setItem(
-            "ticketData",
-            JSON.stringify({
-              attendeeName: payment?.customer_name || "",
-              attendeeEmail: payment?.customer_email || "",
-              eventName: payment?.event_name || "",
-              eventDate: "",
-              timeFrom: "",
-              ticketId: ticket?.id,
-            })
-          );
+          const event = payment?.event || {};
+          const eventDate = event?.day || ticket?.event_date || "";
+          const eventTime = event?.time_from || ticket?.event_time || "";
+          const eventLocation = event?.location || ticket?.event_location || "";
+          const eventName = event?.name || ticket?.event_name || "";
+          const attendeeEmail = payment?.customer_email || ticket?.current_owner_email || "";
+
+          const ticketData = {
+            attendeeName: payment?.customer_name || "",
+            attendeeEmail,
+            eventName,
+            eventDate,
+            timeFrom: eventTime,
+            eventLocation,
+            ticketId: ticket?.ticket_id || ticket?.id,
+          };
+
+          localStorage.setItem("ticketData", JSON.stringify(ticketData));
+
+          if (attendeeEmail) {
+            try {
+              await fetch("/api/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  emails: [
+                    {
+                      type: "ticket",
+                      to: attendeeEmail,
+                      data: {
+                        name: ticketData.attendeeName,
+                        eventName,
+                        date: eventDate,
+                        time: eventTime,
+                        location: eventLocation,
+                        ticketId: ticketData.ticketId,
+                      },
+                    },
+                  ],
+                }),
+              });
+            } catch (e) {
+              console.error("Failed to send ticket email:", e);
+            }
+          }
+
           setStatus("success");
           setTimeout(() => router.push("/ticket-confirmation"), 1500);
         } else {

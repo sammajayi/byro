@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-const Payout = () => {
+const Payout = ({ event }) => {
   const [payoutMethod, setPayoutMethod] = useState("bank");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -96,6 +96,7 @@ const Payout = () => {
               data: {
                 name: formData.accountName || "User",
                 amount: formData.amount,
+                eventName: event?.name || "",
                 method: payoutMethod,
                 ...(payoutMethod === "bank" && {
                   accountNumber: formData.accountNumber,

@@ -73,17 +73,45 @@ export default function EventRegistration() {
         });
 
         const ticket = result.tickets?.[0];
-        localStorage.setItem(
-          "ticketData",
-          JSON.stringify({
-            attendeeName: customerName,
-            attendeeEmail: formData.email,
-            eventName: event.name,
-            eventDate: event.day,
-            timeFrom: event.time_from,
-            ticketId: ticket?.id,
-          })
-        );
+        const ticketData = {
+          attendeeName: customerName,
+          attendeeEmail: formData.email,
+          eventName: event.name,
+          eventDate: event.day,
+          timeFrom: event.time_from,
+          eventLocation: event.location,
+          ticketId: ticket?.id || ticket?.ticket_id,
+        };
+
+        localStorage.setItem("ticketData", JSON.stringify(ticketData));
+
+        if (formData.email) {
+          try {
+            await fetch("/api/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                emails: [
+                  {
+                    type: "ticket",
+                    to: formData.email,
+                    data: {
+                      name: customerName,
+                      eventName: event.name,
+                      date: event.day,
+                      time: event.time_from,
+                      location: event.location,
+                      ticketId: ticketData.ticketId,
+                    },
+                  },
+                ],
+              }),
+            });
+          } catch (e) {
+            console.error("Failed to send ticket email:", e);
+          }
+        }
+
         router.push("/ticket-confirmation");
         return;
       }

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { introduce } from "../../app/assets/index";
+import { generateICS, downloadICS } from "@/lib/calendar";
 
 
 function TicketConfirmationContent() {
@@ -22,6 +23,29 @@ function TicketConfirmationContent() {
       localStorage.removeItem("ticketData");
     }
   }, []);
+
+  const handleAddToCalendar = useCallback(() => {
+    if (!ticketData) return;
+
+    const startDateTime = ticketData.eventDate
+      ? `${ticketData.eventDate}T${ticketData.timeFrom || '00:00'}:00`
+      : new Date().toISOString();
+
+    const endDate = new Date(startDateTime);
+    endDate.setHours(endDate.getHours() + 2);
+    const endDateTime = endDate.toISOString();
+
+    const ics = generateICS({
+      eventName: ticketData.eventName || 'Event',
+      description: `Ticket for ${ticketData.attendeeName}`,
+      location: ticketData.eventLocation || '',
+      startDate: startDateTime,
+      endDate: endDateTime,
+      organizer: 'Byro Africa',
+    });
+
+    downloadICS(ics, `${(ticketData.eventName || 'event').replace(/\s+/g, '_')}.ics`);
+  }, [ticketData]);
 
   if (!ticketData) {
     return (
@@ -102,12 +126,12 @@ function TicketConfirmationContent() {
               >
                 Download Ticket
               </button>
-              <Link
-                href="/"
+              <button
+                onClick={handleAddToCalendar}
                 className="flex-1 inline-flex justify-center items-center px-4 sm:px-6 py-3 border-2 text-sm sm:text-base font-medium rounded-xl text-black bg-white hover:bg-[#d6e8e1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#16B979]"
               >
                 Add to Calendar
-              </Link>
+              </button>
             </div>
           </div>
         </div>

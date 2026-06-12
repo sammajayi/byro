@@ -3,7 +3,6 @@ const brandGreen = '#16B979';
 const brandDark = '#171717';
 const brandGray = '#666666';
 const brandLight = '#F5F7FA';
-const brandGreenLight = '#E8F8F2';
 
 const emailWrapper = (content) => `
   <div style="background-color: ${brandLight}; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
@@ -11,7 +10,7 @@ const emailWrapper = (content) => `
       <tr>
         <td style="background: linear-gradient(135deg, ${brandPrimary}, #0056CC); padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
           <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Byro</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 4px 0 0; font-size: 14px;">Your Ticket is Confirmed</p>
+          <p style="color: rgba(255,255,255,0.9); margin: 4px 0 0; font-size: 14px;">Event Created</p>
         </td>
       </tr>
       <tr>
@@ -33,71 +32,72 @@ const emailWrapper = (content) => `
   </div>
 `;
 
-export const TicketConfirmation = (name, eventName, date, time, location, ticketId) => {
+export const EventCreated = (name, eventName, eventDate, eventTime, eventLocation, eventLink) => {
   const content = `
     <div style="text-align: center; margin-bottom: 24px;">
-      <div style="width: 56px; height: 56px; background: ${brandGreenLight}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${brandGreen}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
+      <div style="width: 56px; height: 56px; background: #D9EBFF; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${brandPrimary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
       </div>
-      <h2 style="color: ${brandDark}; margin: 0 0 8px; font-size: 20px; font-weight: 700;">Ticket Confirmed!</h2>
-      <p style="color: ${brandGray}; margin: 0; font-size: 14px;">Your ticket has been booked successfully.</p>
+      <h2 style="color: ${brandDark}; margin: 0 0 8px; font-size: 20px; font-weight: 700;">Event Created Successfully!</h2>
+      <p style="color: ${brandGray}; margin: 0; font-size: 14px;">Your event is now live and ready for attendees.</p>
     </div>
 
     <div style="background: linear-gradient(135deg, ${brandPrimary}, #0056CC); border-radius: 8px; padding: 20px; margin-bottom: 20px; color: #ffffff; text-align: center;">
-      <p style="margin: 0 0 4px; font-size: 12px; opacity: 0.9;">${eventName}</p>
-      <h3 style="margin: 0; font-size: 22px; font-weight: 700;">${name}</h3>
+      <p style="margin: 0 0 4px; font-size: 12px; opacity: 0.9;">Your Event</p>
+      <h3 style="margin: 0; font-size: 22px; font-weight: 700;">${eventName}</h3>
     </div>
 
-    ${ticketId ? `
     <table cellpadding="0" cellspacing="0" style="width: 100%; background: ${brandLight}; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-      <tr>
-        <td style="padding: 8px 0;">
-          <p style="color: ${brandGray}; font-size: 12px; margin: 0;">Ticket ID</p>
-          <p style="color: ${brandDark}; font-size: 14px; font-weight: 600; margin: 2px 0 0; font-family: monospace;">${ticketId}</p>
-        </td>
-      </tr>
-    </table>` : ''}
-
-    <table cellpadding="0" cellspacing="0" style="width: 100%; background: ${brandLight}; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+      ${eventDate ? `
       <tr>
         <td style="padding: 8px 0;">
           <p style="color: ${brandGray}; font-size: 12px; margin: 0;">Date</p>
-          <p style="color: ${brandDark}; font-size: 14px; font-weight: 600; margin: 2px 0 0;">${date}</p>
+          <p style="color: ${brandDark}; font-size: 14px; font-weight: 600; margin: 2px 0 0;">${eventDate}</p>
         </td>
-      </tr>
-      ${time ? `
+      </tr>` : ''}
+      ${eventTime ? `
       <tr>
         <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
           <p style="color: ${brandGray}; font-size: 12px; margin: 0;">Time</p>
-          <p style="color: ${brandDark}; font-size: 14px; margin: 2px 0 0;">${time}</p>
+          <p style="color: ${brandDark}; font-size: 14px; margin: 2px 0 0;">${eventTime}</p>
         </td>
       </tr>` : ''}
-      ${location ? `
+      ${eventLocation ? `
       <tr>
         <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
           <p style="color: ${brandGray}; font-size: 12px; margin: 0;">Location</p>
-          <p style="color: ${brandDark}; font-size: 14px; margin: 2px 0 0;">${location}</p>
+          <p style="color: ${brandDark}; font-size: 14px; margin: 2px 0 0;">${eventLocation}</p>
         </td>
       </tr>` : ''}
     </table>
 
     <p style="color: ${brandDark}; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">Hi ${name},</p>
     <p style="color: ${brandGray}; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
-      Thank you for your purchase! Your ticket for <strong>${eventName}</strong> has been confirmed. Present this email or your ticket ID at the event for entry.
+      Your event <strong>${eventName}</strong> has been created and is now live! You can manage your event, track attendees, and view ticket sales from your dashboard.
     </p>
+    ${eventLink ? `
+    <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 16px;">
+      <tr>
+        <td style="text-align: center;">
+          <a href="${eventLink}" style="display: inline-block; background: linear-gradient(135deg, ${brandPrimary}, #0056CC); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 14px; font-weight: 600;">View Your Event</a>
+        </td>
+      </tr>
+    </table>` : ''}
     <p style="color: ${brandGray}; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
-      Don't forget to add the event to your calendar so you don't miss it!
+      Share the event link with your audience to start selling tickets!
     </p>
     <p style="color: ${brandDark}; font-size: 14px; line-height: 1.6; margin: 0 0 4px;">Best regards,</p>
     <p style="color: ${brandPrimary}; font-size: 14px; font-weight: 600; margin: 0;">Byro Team</p>
   `;
 
   return {
-    subject: `Your Ticket for ${eventName} is Confirmed!`,
-    text: `Hi ${name},\n\nYour ticket for ${eventName} has been confirmed!\n\nDate: ${date}\nTime: ${time}\nLocation: ${location}\n\nThank you for using Byro!`,
+    subject: `${eventName} is Live!`,
+    text: `Hi ${name},\n\nYour event "${eventName}" has been created successfully! It's now live and ready for attendees.\n\nDate: ${eventDate}\nTime: ${eventTime}\nLocation: ${eventLocation}\n\nManage your event: ${eventLink}\n\nBest regards,\nByro Team`,
     html: emailWrapper(content)
   };
 };

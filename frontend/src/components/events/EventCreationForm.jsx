@@ -207,6 +207,35 @@ export default function EventCreationForm({ editSlug = null, initialData = null 
             setEventSlug(response.slug || response.id);
             setEventCreated(true);
             resetForm();
+
+            const userData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+            const userEmail = response?.owner_email || userData?.email;
+            if (userEmail) {
+              try {
+                fetch("/api/send-email", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    emails: [
+                      {
+                        type: "event_created",
+                        to: userEmail,
+                        data: {
+                          name: userData?.name || response?.owner_email || "Organizer",
+                          eventName: response?.name || eventName,
+                          eventDate: response?.day || date,
+                          eventTime: response?.time_from || timeFrom,
+                          eventLocation: response?.location || physicalLocation,
+                          eventLink: `${window.location.origin}/${response?.slug}`,
+                        },
+                      },
+                    ],
+                  }),
+                });
+              } catch (e) {
+                console.error("Failed to send event created email:", e);
+              }
+            }
           }
         } else {
           throw new Error("Invalid response format from server");
