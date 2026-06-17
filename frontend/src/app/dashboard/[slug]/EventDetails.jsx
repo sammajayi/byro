@@ -140,12 +140,7 @@ export default function EventDetails() {
         <div className="lg:w-1/2">
           {event?.event_image_url || event?.event_image ? (
             <img
-              src={
-                event.event_image_url ||
-                (event.event_image?.startsWith("http")
-                  ? event.event_image
-                  : `${(process.env.NEXT_PUBLIC_API_URL || "https://byro.onrender.com").replace(/\/api\/?$/, "")}${event.event_image}`)
-              }
+              src={event.event_image_url || event.event_image}
               alt={event?.name}
               className="w-full h-[244px] object-cover rounded-2xl"
             />
