@@ -120,45 +120,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'api.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.getenv('DB_ENGINE'),
-#         'NAME': os.getenv('DB_NAME'),
-#         'USER': os.getenv('DB_USER'),
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': os.getenv('DB_HOST'),
-#         'PORT': os.getenv('DB_PORT'),
-#     }
-# }
-
-
-
-
-# # postgresql://bryo_user:Ba14jYMyFDYaqzsOHW40ulAIzZNHJa4F@dpg-d15b2nffte5s7390pslg-a.oregon-postgres.render.com/bryo
-# import dj_database_url
-
-# DATABASES = {'default': dj_database_url.parse('postgresql://bryo_user:Ba14jYMyFDYaqzsOHW40ulAIzZNHJa4F@dpg-d15b2nffte5s7390pslg-a.oregon-postgres.render.com:5432/postgres?sslmode=require')}
-
-
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default='postgresql://postgres:Ba14jYMyFDYaqzsOHW40ulAIzZNHJa4F@dpg-d15b2nffte5s7390pslg-a.oregon-postgres.render.com/bryo',
-#         conn_max_age=600
-#     )
-# }
-
 
 
 REST_FRAMEWORK = {
@@ -172,27 +133,6 @@ REST_FRAMEWORK = {
 }
 
 
-# if os.environ.get('final-project-472521'):
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.postgresql',
-#             'NAME': 'bryo_db',
-#             'USER': 'webapp_user',
-#             'PASSWORD': 'Oluwarebecca100%',
-#             'HOST': '10.143.0.3',  
-#             'PORT': '5432',
-#         }
-#     }
-    
-#     DEBUG = False
-#     ALLOWED_HOSTS = ['*']
-    
-#     # Static files
-#     STATIC_ROOT = '/var/www/app/staticfiles'
-# else:
-#     # Keep your existing development settings
-#     DEBUG = True
-#     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Static files configuration
 STATIC_URL = '/static/'
@@ -281,6 +221,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.byro.africa',
     'https://byro-two.vercel.app',
     'http://localhost:3000',
+    'https://usebyrom.com',
 ]
 
 
