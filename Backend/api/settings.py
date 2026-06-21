@@ -281,6 +281,9 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.byro.africa',
     'https://byro-two.vercel.app',
     'http://localhost:3000',
+    'http://usebyro.com',
+
+
 ]
 
 
